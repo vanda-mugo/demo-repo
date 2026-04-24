@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FutureGas ERP — Stakeholder Demo Checklist</title>
+    <style>
+        :root {
+            --primary: #1a5276;
+            --secondary: #2874a6;
+            --accent: #e67e22;
+            --success: #27ae60;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --border: #dee2e6;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 12px 12px 0 0;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 { font-size: 1.8rem; margin-bottom: 8px; }
+        header .subtitle { opacity: 0.9; font-size: 0.95rem; }
+
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .save-indicator.show { opacity: 1; }
+
+        .meta-bar {
+            background: var(--card-bg);
+            padding: 20px 40px;
+            border-bottom: 2px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .meta-field { display: flex; flex-direction: column; }
+        .meta-field label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .meta-field input {
+            border: none;
+            border-bottom: 2px solid var(--border);
+            padding: 6px 0;
+            font-size: 0.95rem;
+            color: var(--text);
+            background: transparent;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .meta-field input:focus { border-bottom-color: var(--secondary); }
+
+        .progress-section {
+            background: var(--card-bg);
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .progress-bar-container { display: flex; align-items: center; gap: 15px; }
+        .progress-bar {
+            flex: 1;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+        .progress-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--success);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .scenario {
+            background: var(--card-bg);
+            margin-top: 20px;
+            border-radius: 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .scenario-header {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            padding: 20px 40px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: opacity 0.2s;
+        }
+        .scenario-header:hover { opacity: 0.95; }
+        .scenario-header h2 { font-size: 1.15rem; font-weight: 600; }
+        .scenario-header .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        .scenario-body { padding: 0; }
+
+        .checkpoint-group { border-bottom: 1px solid var(--border); }
+        .checkpoint-group:last-child { border-bottom: none; }
+        .checkpoint-title {
+            background: #f1f3f5;
+            padding: 14px 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .checkpoint-title .icon { font-size: 1.1rem; }
+
+        .checklist { list-style: none; padding: 0; }
+        .checklist li {
+            padding: 14px 40px;
+            border-bottom: 1px solid #f1f3f5;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            transition: background 0.15s;
+        }
+        .checklist li:hover { background: #fafbfc; }
+        .checklist li:last-child { border-bottom: none; }
+        .checklist li.checked { background: #f0fff4; }
+        .checklist li.checked .item-text {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .checkbox-wrapper { position: relative; flex-shrink: 0; margin-top: 2px; }
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--success);
+        }
+
+        .item-content { flex: 1; }
+        .item-text { font-size: 0.92rem; color: var(--text); }
+        .item-note {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        .notes-area { margin-top: 8px; }
+        .notes-area textarea {
+            width: 100%;
+            min-height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            resize: vertical;
+            font-family: inherit;
+            outline: none;
+        }
+        .notes-area textarea:focus { border-color: var(--secondary); }
+
+        .signatures {
+            background: var(--card-bg);
+            margin-top: 20px;
+            padding: 30px 40px;
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        .signature-block { display: flex; flex-direction: column; }
+        .signature-block label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .signature-line {
+            border-bottom: 2px solid var(--text);
+            height: 50px;
+            margin-bottom: 6px;
+        }
+        .signature-block input {
+            border: none;
+            border-bottom: 1px solid var(--border);
+            padding: 6px 0;
+            font-size: 0.9rem;
+            outline: none;
+            margin-top: 8px;
+        }
+
+        .footer-actions {
+            margin-top: 20px;
+            padding: 20px 40px;
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--secondary); }
+        .btn-secondary { background: #e9ecef; color: var(--text); }
+        .btn-secondary:hover { background: #dee2e6; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #219a52; }
+        .btn-warning { background: var(--accent); color: white; }
+        .btn-warning:hover { background: #d35400; }
+
+        .serve-options {
+            background: var(--card-bg);
+            margin-top: 20px;
+            padding: 25px 40px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent);
+        }
+        .serve-options h3 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+        .serve-options ol {
+            margin-left: 20px;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+        .serve-options li { margin-bottom: 8px; }
+        .serve-options code {
+            background: #f1f3f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .btn, .footer-actions, .serve-options, .save-indicator { display: none !important; }
+            .scenario { break-inside: avoid; box-shadow: none; border: 1px solid #dee2e6; }
+            .notes-area textarea { border: 1px solid #ccc; }
+        }
+
+        .summary-box {
+            background: var(--card-bg);
+            padding: 20px 40px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent);
+        }
+        .summary-box h3 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .summary-box ul {
+            margin-left: 20px;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+        .summary-box li { margin-bottom: 6px; }
+    </style>
+<base target="_blank">
+</head>
+<body>
+    <div class="save-indicator" id="saveIndicator">💾 Saved</div>
+
+    <div class="container">
+        <header>
+            <h1>FutureGas ERP — Stakeholder Demo Checklist</h1>
+            <div class="subtitle">System Validation & Business Logic Walkthrough | April 2026</div>
+        </header>
+
+        <div class="meta-bar">
+            <div class="meta-field">
+                <label>Client / Organization</label>
+                <input type="text" id="clientName" placeholder="Enter client name..." oninput="saveState()">
+            </div>
+            <div class="meta-field">
+                <label>Demo Date</label>
+                <input type="date" id="demoDate" oninput="saveState()">
+            </div>
+            <div class="meta-field">
+                <label>Presenter</label>
+                <input type="text" id="presenter" placeholder="Enter presenter name..." oninput="saveState()">
+            </div>
+            <div class="meta-field">
+                <label>Demo Duration</label>
+                <input type="text" id="demoDuration" placeholder="e.g. 90 minutes" oninput="saveState()">
+            </div>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-bar-container">
+                <span style="font-size:0.85rem; font-weight:600; color:#6c757d;">Overall Progress</span>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="overallProgress"></div>
+                </div>
+                <span class="progress-text" id="progressText">0%</span>
+            </div>
+        </div>
+
+        <!-- SCENARIO 1 -->
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>Scenario 1 — Field Sales: Order to Cash</h2>
+                <span class="badge">10 Checkpoints</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📋</span>Checkpoint 1 — Order Creation</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Customer must exist — order cannot be created for an unknown customer ID</div><div class="notes-area"><textarea data-note="s1c1i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Walk-in customer — if generic "WALK-IN" account, agent must supply actual customer name (mandatory, rejects blank/whitespace)</div><div class="notes-area"><textarea data-note="s1c1i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">At least one line item — order with zero items cannot be saved</div><div class="notes-area"><textarea data-note="s1c1i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c1i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Payment type rules validated — FULL requires bank account; PARTIAL requires bank account + amount > 0; CREDIT needs no bank account</div><div class="notes-area"><textarea data-note="s1c1i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c1i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Stock pre-check — system checks available stock at selected warehouse for every line item; returns per-product error if short</div><div class="notes-area"><textarea data-note="s1c1i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">✅</span>Checkpoint 2 — Approval & Debtor Report</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Customer Debtor Report accessible to approver — shows credit limit, outstanding balance, available credit, over-limit flag</div><div class="notes-area"><textarea data-note="s1c2i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Aging buckets displayed — Current, 1–30 days, 31–60 days, 61–90 days, Over 90 days</div><div class="notes-area"><textarea data-note="s1c2i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Unpaid Invoice List shown — invoice number, date, due date, total, paid, balance, days overdue</div><div class="notes-area"><textarea data-note="s1c2i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Status gate — only SUBMITTED orders can be approved or rejected; confirmed/completed orders blocked</div><div class="notes-area"><textarea data-note="s1c2i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c2i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Rejection requires a reason — rejection note mandatory and stored against the order</div><div class="notes-area"><textarea data-note="s1c2i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🚚</span>Checkpoint 3 — Dispatch Order Creation</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Sales order must be CONFIRMED — DRAFT, SUBMITTED, or processing orders rejected</div><div class="notes-area"><textarea data-note="s1c3i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Only 50 kg cylinder products — other SKUs named and directed to milk-run process</div><div class="notes-area"><textarea data-note="s1c3i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">No duplicate active dispatch — existing active dispatch blocks second creation, shows existing dispatch number</div><div class="notes-area"><textarea data-note="s1c3i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c3i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Stock availability hard-check — warehouse stock re-checked at dispatch creation</div><div class="notes-area"><textarea data-note="s1c3i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c3i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Stock reservations created automatically — ring-fenced, cannot allocate to other orders</div><div class="notes-area"><textarea data-note="s1c3i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🚐</span>Checkpoint 4 — Trip Creation & Order Assignment</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c4i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Vehicle must be active — inactive/off-road/decommissioned vehicles rejected</div><div class="notes-area"><textarea data-note="s1c4i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c4i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Vehicle cylinder capacity enforced — total expected count cannot exceed capacity</div><div class="notes-area"><textarea data-note="s1c4i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c4i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Order–warehouse match — dispatch order source warehouse must match trip warehouse</div><div class="notes-area"><textarea data-note="s1c4i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c4i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">No double-booking — dispatch already assigned to different trip cannot be added to second trip</div><div class="notes-area"><textarea data-note="s1c4i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c4i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Orders with scanned cylinders cannot be removed — must un-scan first</div><div class="notes-area"><textarea data-note="s1c4i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c4i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">Loading must start before scanning — cylinders only scanned while trip in LOADING status</div><div class="notes-area"><textarea data-note="s1c4i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📱</span>Checkpoint 5 — Cylinder Scanning onto Trip</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c5i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Trip must be in LOADING — scanning locked outside loading phase</div><div class="notes-area"><textarea data-note="s1c5i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c5i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder must exist — scanned QR/serial number must be registered in system</div><div class="notes-area"><textarea data-note="s1c5i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c5i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder must be IN_STOCK — IN_TRANSIT, SOLD, SCRAPPED, or non-stock statuses rejected</div><div class="notes-area"><textarea data-note="s1c5i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c5i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder must be FULL — EMPTY or PARTIAL scan produces error showing actual fill status</div><div class="notes-area"><textarea data-note="s1c5i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c5i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder must be at trip's warehouse — cross-warehouse scanning blocked</div><div class="notes-area"><textarea data-note="s1c5i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c5i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">No duplicate scanning — same cylinder twice onto same trip blocked</div><div class="notes-area"><textarea data-note="s1c5i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c5i7" onchange="saveState()"></div><div class="item-content"><div class="item-text">Vehicle capacity not exceeded — scanning beyond configured limit blocked</div><div class="notes-area"><textarea data-note="s1c5i7" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c5i8" onchange="saveState()"></div><div class="item-content"><div class="item-text">After successful scan, cylinder status immediately changes to IN_TRANSIT; removal reverts to IN_STOCK</div><div class="notes-area"><textarea data-note="s1c5i8" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🛣️</span>Checkpoint 6 — Trip Departure (IN_TRANSIT)</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c6i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">All expected cylinders must be scanned — scanned count must equal expected count before departure</div><div class="notes-area"><textarea data-note="s1c6i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c6i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Loading revert protection — revert to CREATED blocked if any cylinders scanned</div><div class="notes-area"><textarea data-note="s1c6i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c6i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Stock movements created at departure — SALES_DELIVERY stock-out records created permanently</div><div class="notes-area"><textarea data-note="s1c6i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🎯</span>Checkpoint 7 — Cylinder Assignment to Customer Orders</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c7i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Trip must be IN_TRANSIT or DELIVERING — assignment blocked for other statuses</div><div class="notes-area"><textarea data-note="s1c7i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c7i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder cannot be double-assigned — already assigned to one order blocked from another</div><div class="notes-area"><textarea data-note="s1c7i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c7i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Product must match order — cylinder product must correspond to dispatch order item</div><div class="notes-area"><textarea data-note="s1c7i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c7i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Maximum cylinder count enforced — cannot assign more than ordered quantity</div><div class="notes-area"><textarea data-note="s1c7i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c7i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Stock reservations fulfilled per cylinder — each assignment auto-fulfils one reservation unit</div><div class="notes-area"><textarea data-note="s1c7i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📦</span>Checkpoint 8 — Delivery Recording & Empty Cylinder Collection</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c8i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Assigned cylinders marked DELIVERED and status changed to SOLD with customer and sale date recorded</div><div class="notes-area"><textarea data-note="s1c8i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c8i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Empty return: cylinder must be registered — serial number must exist in system</div><div class="notes-area"><textarea data-note="s1c8i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c8i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Empty return: cylinder must be at customer's premises (status SOLD) — IN_STOCK, IN_TRANSIT, SCRAPPED, DEFECTIVE rejected</div><div class="notes-area"><textarea data-note="s1c8i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c8i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Empty return: cylinder must belong to THIS customer — cross-customer collection blocked</div><div class="notes-area"><textarea data-note="s1c8i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c8i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Partial empties supported — flagged as PARTIAL with gross weight recorded; tracked separately</div><div class="notes-area"><textarea data-note="s1c8i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">💳</span>Checkpoint 9 — Checkout & Payment</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c9i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Only DRAFT orders can be checked out directly — CONFIRMED/PROCESSING must go through dispatch flow</div><div class="notes-area"><textarea data-note="s1c9i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c9i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Bank account must be active and belong to the tenant — inactive/deleted accounts rejected</div><div class="notes-area"><textarea data-note="s1c9i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c9i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Payment splits validation — minimum 2 entries, each needs bank account + amount > 0, sum must equal total (±0.01)</div><div class="notes-area"><textarea data-note="s1c9i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c9i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Partial payment: amount required and must be greater than zero</div><div class="notes-area"><textarea data-note="s1c9i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c9i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Credit sale: no bank account required; invoice created in SENT status with 30-day due date</div><div class="notes-area"><textarea data-note="s1c9i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c9i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">Over-payment blocked — payment larger than outstanding balance rejected</div><div class="notes-area"><textarea data-note="s1c9i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c9i7" onchange="saveState()"></div><div class="item-content"><div class="item-text">Automatic accounting entries posted — DR COGS/CR Inventory; DR AR/CR Revenue; DR Bank/CR AR</div><div class="notes-area"><textarea data-note="s1c9i7" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🏁</span>Checkpoint 10 — Trip Completion</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c10i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Trip-linked dispatch orders must complete via trip — direct completion blocked</div><div class="notes-area"><textarea data-note="s1c10i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s1c10i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Completion finalises all order statuses — sales orders → COMPLETED, dispatch orders → COMPLETED, TripCylinder records finalised</div><div class="notes-area"><textarea data-note="s1c10i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCENARIO 2 -->
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>Scenario 2 — Bulk Gas Purchase Flow</h2>
+                <span class="badge">3 Checkpoints</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📝</span>Checkpoint 1 — Purchase Order Lifecycle</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">DRAFT → SUBMITTED: PO cannot be submitted without line items and valid supplier</div><div class="notes-area"><textarea data-note="s2c1i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">SUBMITTED → APPROVED: requires purchases.orders.approve permission</div><div class="notes-area"><textarea data-note="s2c1i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">SUBMITTED → REJECTED: rejection reason recorded, PO returns for revision</div><div class="notes-area"><textarea data-note="s2c1i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c1i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">APPROVED → SENT: PO sent to supplier; cannot be edited after this point</div><div class="notes-area"><textarea data-note="s2c1i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c1i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Edit restriction — PO only updatable in DRAFT status</div><div class="notes-area"><textarea data-note="s2c1i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c1i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cancel restriction — only permitted for orders not yet received</div><div class="notes-area"><textarea data-note="s2c1i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c1i7" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create-and-approve shortcut — single-step operation bypasses draft-submit workflow</div><div class="notes-area"><textarea data-note="s2c1i7" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📥</span>Checkpoint 2 — Bulk Gas Receipt (GRN)</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Must reference valid Purchase Order — linked to existing PO belonging to matching supplier</div><div class="notes-area"><textarea data-note="s2c2i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">PO must be in receivable state — cancelled or already-closed PO cannot generate receipts</div><div class="notes-area"><textarea data-note="s2c2i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tank must be active — gas only receipted into ACTIVE tank; inactive/decommissioned rejected</div><div class="notes-area"><textarea data-note="s2c2i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Quantity (kg) and unit cost per kg both mandatory fields</div><div class="notes-area"><textarea data-note="s2c2i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c2i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tank level before captured automatically for before/after audit trail</div><div class="notes-area"><textarea data-note="s2c2i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c2i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">Draft-only edits — receipt only editable in DRAFT status</div><div class="notes-area"><textarea data-note="s2c2i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">✅</span>Checkpoint 3 — Receipt Confirmation</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Must be in DRAFT to confirm — already-confirmed or cancelled receipts cannot be re-confirmed</div><div class="notes-area"><textarea data-note="s2c3i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tank level updated automatically — quantity added to current level; tank-level-after recorded</div><div class="notes-area"><textarea data-note="s2c3i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Accounting entry created — DR Inventory / CR Accounts Payable</div><div class="notes-area"><textarea data-note="s2c3i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s2c3i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cancel restriction after confirmation — confirmed receipts cannot be cancelled; manual adjustment required</div><div class="notes-area"><textarea data-note="s2c3i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCENARIO 3 -->
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>Scenario 3 — 50 kg Cylinder Registration</h2>
+                <span class="badge">3 Checkpoints</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🏷️</span>Checkpoint 1 — Product Prerequisite</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Idempotent product creation — "ensure-product" call finds or creates default 50 kg cylinder product (SKU: CYL-50KG); no duplicates on repeat calls</div><div class="notes-area"><textarea data-note="s3c1i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Category auto-created — "Gas Cylinders" category created if missing</div><div class="notes-area"><textarea data-note="s3c1i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Unit auto-created — "Pieces (PCS)" unit created if missing</div><div class="notes-area"><textarea data-note="s3c1i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🔢</span>Checkpoint 2 — Cylinder Registration</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Product must exist — 50 kg cylinder product must be present before registration</div><div class="notes-area"><textarea data-note="s3c2i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Serial number uniqueness — custom serial checked against tenant inventory; duplicates rejected with conflict error</div><div class="notes-area"><textarea data-note="s3c2i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Auto-generated serial format — CYL-50-YYYYMM-NNNN (e.g. CYL-50-202604-0023), incrementing from highest existing number in current month</div><div class="notes-area"><textarea data-note="s3c2i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Warehouse assignment — every cylinder must be assigned to a warehouse at registration</div><div class="notes-area"><textarea data-note="s3c2i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c2i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Fill status at registration — can be EMPTY (default) or FULL; affects filling/dispatch eligibility</div><div class="notes-area"><textarea data-note="s3c2i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c2i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">QR code returned immediately — printable QR string returned as permanent identity link</div><div class="notes-area"><textarea data-note="s3c2i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📦</span>Checkpoint 3 — Bulk Registration</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Quantity-driven loop — each cylinder gets unique serial number; no batch/shared serial</div><div class="notes-area"><textarea data-note="s3c3i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s3c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">All-or-nothing behaviour — if any registration fails, already-registered cylinders retain records (sequential, not transactional); partial results inspectable</div><div class="notes-area"><textarea data-note="s3c3i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCENARIO 4 -->
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>Scenario 4 — Bulk Gas Tank Management</h2>
+                <span class="badge">4 Checkpoints</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🏭</span>Checkpoint 1 — Tank Creation</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Must be at FILLING_PLANT or DEPOT warehouse — sales warehouse assignment blocked</div><div class="notes-area"><textarea data-note="s4c1i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Capacity required — maximum capacity (kg) must be provided</div><div class="notes-area"><textarea data-note="s4c1i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Initial level cannot exceed capacity — opening level ≤ maximum capacity</div><div class="notes-area"><textarea data-note="s4c1i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c1i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Status defaults to ACTIVE — new tanks active and ready to receive gas</div><div class="notes-area"><textarea data-note="s4c1i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">⚖️</span>Checkpoint 2 — Tank Level Adjustments</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Positive or negative adjustments supported — upward (receipt) and downward (evaporation, calibration, discrepancy)</div><div class="notes-area"><textarea data-note="s4c2i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Level cannot go negative — adjustment below 0 kg rejected</div><div class="notes-area"><textarea data-note="s4c2i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Level cannot exceed capacity — adjustment above max capacity rejected</div><div class="notes-area"><textarea data-note="s4c2i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">All adjustments logged — BulkGasTankTransaction created with type, amount, before/after levels, user</div><div class="notes-area"><textarea data-note="s4c2i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">⬇️</span>Checkpoint 3 — Automatic Level Deduction (Filling)</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">On Filling Session completion, total net gas filled auto-deducted from source tank — no manual entry needed</div><div class="notes-area"><textarea data-note="s4c3i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tank transaction log records deduction as FILLING type</div><div class="notes-area"><textarea data-note="s4c3i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📜</span>Checkpoint 4 — Transaction History</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c4i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Paginated, chronological log of every level-changing event available via endpoint</div><div class="notes-area"><textarea data-note="s4c4i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c4i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Covers: gas receipts, filling session deductions, manual calibration adjustments, loss/shrinkage write-offs</div><div class="notes-area"><textarea data-note="s4c4i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s4c4i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Complete chain-of-custody for every kilogram of gas</div><div class="notes-area"><textarea data-note="s4c4i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCENARIO 5 -->
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>Scenario 5 — Cylinder Filling Flow</h2>
+                <span class="badge">5 Checkpoints</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🆕</span>Checkpoint 1 — Session Creation</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Warehouse must be FILLING_PLANT type — regular warehouses, depots, distribution points rejected</div><div class="notes-area"><textarea data-note="s5c1i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tank must be at same warehouse — source tank physically located at session warehouse</div><div class="notes-area"><textarea data-note="s5c1i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tank must be ACTIVE — inactive or decommissioned tanks rejected as filling source</div><div class="notes-area"><textarea data-note="s5c1i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📲</span>Checkpoint 2 — Adding Cylinders to Session</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Session must be OPEN or IN_PROGRESS — completed or cancelled sessions rejected</div><div class="notes-area"><textarea data-note="s5c2i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder must be at filling plant — cross-depot or customer-held cylinders blocked</div><div class="notes-area"><textarea data-note="s5c2i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder must NOT be FULL — full cylinders blocked to prevent double-counting</div><div class="notes-area"><textarea data-note="s5c2i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder must NOT be NEEDS_INSPECTION — flagged cylinders blocked from fill queue until inspection passed</div><div class="notes-area"><textarea data-note="s5c2i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c2i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder must NOT be SCRAPPED — condemned cylinders cannot be filled</div><div class="notes-area"><textarea data-note="s5c2i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c2i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">No duplicates in session — same cylinder scanned twice blocked with conflict error</div><div class="notes-area"><textarea data-note="s5c2i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c2i7" onchange="saveState()"></div><div class="item-content"><div class="item-text">Must be a tracked cylinder — only serial numbers designated as cylinder records allowed (not bulk product stock items)</div><div class="notes-area"><textarea data-note="s5c2i7" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c2i8" onchange="saveState()"></div><div class="item-content"><div class="item-text">On first successful scan, session auto-transitions from OPEN to IN_PROGRESS and records start time</div><div class="notes-area"><textarea data-note="s5c2i8" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">⚖️</span>Checkpoint 3 — Recording Fill Results</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Item must be PENDING — already FILLED or REJECTED cylinders cannot be processed again</div><div class="notes-area"><textarea data-note="s5c3i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Gross weight required — actual post-fill gross weight (kg) must be provided</div><div class="notes-area"><textarea data-note="s5c3i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Net gas calculated automatically — net = gross − tare weight; stored tare used automatically, operator can override</div><div class="notes-area"><textarea data-note="s5c3i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c3i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder marked FULL after fill — fillStatus → FULL, grossWeight and lastRefillDate updated, fill count increments by 1</div><div class="notes-area"><textarea data-note="s5c3i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">❌</span>Checkpoint 4 — Rejecting a Cylinder</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c4i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Item must be PENDING — only unfilled cylinders can be rejected</div><div class="notes-area"><textarea data-note="s5c4i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c4i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Fill status set to NEEDS_INSPECTION — cylinder flagged requiring inspection before re-entering fill queue</div><div class="notes-area"><textarea data-note="s5c4i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c4i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Effectively quarantined from fill queue until cleared</div><div class="notes-area"><textarea data-note="s5c4i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🏁</span>Checkpoint 5 — Completing the Session</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c5i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">All items must be FILLED or REJECTED — session cannot complete if any cylinder still PENDING</div><div class="notes-area"><textarea data-note="s5c5i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c5i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tank deducted automatically — total net gas across all FILLED cylinders deducted atomically from source tank</div><div class="notes-area"><textarea data-note="s5c5i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c5i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tank level cannot go negative — completion blocked if total gas filled would take tank below zero</div><div class="notes-area"><textarea data-note="s5c5i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s5c5i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cannot cancel session with FILLED cylinders — must be completed if at least one fill completed</div><div class="notes-area"><textarea data-note="s5c5i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- SCENARIO 6 -->
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>Scenario 6 — Cylinder Tracking Functionality</h2>
+                <span class="badge">7 Checkpoints</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📱</span>Checkpoint 1 — Real-Time QR Code Scanning</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Any authorised device can scan cylinder QR code to retrieve live status</div><div class="notes-area"><textarea data-note="s6c1i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Returns: current status (IN_STOCK / IN_TRANSIT / SOLD / SCRAPPED)</div><div class="notes-area"><textarea data-note="s6c1i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Returns: fill status (FULL / EMPTY / PARTIAL / NEEDS_INSPECTION)</div><div class="notes-area"><textarea data-note="s6c1i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c1i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Returns: current warehouse location (or null if with customer)</div><div class="notes-area"><textarea data-note="s6c1i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c1i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Returns: current customer (if sold), last fill date, fill count, gross/tare weight, manufacture date, last test date</div><div class="notes-area"><textarea data-note="s6c1i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📍</span>Checkpoint 2 — Location Integrity</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Warehouse-bound scanning — cylinder can only scan onto filling session or dispatch trip if at correct warehouse; warehouseId cross-checked</div><div class="notes-area"><textarea data-note="s6c2i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">No phantom movements — every transition generates stock movement record (stock-out on dispatch departure, stock-in on return)</div><div class="notes-area"><textarea data-note="s6c2i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Customer location tracking — on delivery warehouseId cleared and customerId set; on empty return enters IN_TRANSIT until back at warehouse</div><div class="notes-area"><textarea data-note="s6c2i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">⚠️</span>Checkpoint 3 — Weight Discrepancy Detection</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder returned as PARTIAL — fill status set to PARTIAL, gross weight recorded; cannot be directly dispatched until refilled</div><div class="notes-area"><textarea data-note="s6c3i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Discrepancy recorded — WeightDiscrepancy record created linking cylinder, trip, and measured weight</div><div class="notes-area"><textarea data-note="s6c3i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Push notification sent — mobile alert (⚠️ Weight Discrepancy Alert) to responsible users with cylinder serials and trip number</div><div class="notes-area"><textarea data-note="s6c3i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c3i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Trip completion context — discrepancies reviewed as part of trip completion; outstanding discrepancies surfaced in completion summary</div><div class="notes-area"><textarea data-note="s6c3i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🔍</span>Checkpoint 4 — Cylinder Inspection Lifecycle</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c4i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Inspection pass — sets next inspection due date (based on configured hydrostatic test interval); clears NEEDS_INSPECTION flag</div><div class="notes-area"><textarea data-note="s6c4i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c4i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Inspection fail — blocks cylinder from dispatch and filling; status remains NEEDS_INSPECTION until re-inspected</div><div class="notes-area"><textarea data-note="s6c4i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c4i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Overdue inspection — past-due cylinders surfaced in cylinder dashboard under "Needs Inspection" statistics</div><div class="notes-area"><textarea data-note="s6c4i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🗑️</span>Checkpoint 5 — Condemnation (Scrapping)</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c5i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Can only condemn IN_STOCK cylinders — IN_TRANSIT or SOLD cylinders blocked while outside warehouse</div><div class="notes-area"><textarea data-note="s6c5i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c5i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Reason required — condemnation reason must be recorded</div><div class="notes-area"><textarea data-note="s6c5i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c5i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Permanent — scrapped cylinders cannot be re-activated; remain for historical reporting but excluded from operational counts</div><div class="notes-area"><textarea data-note="s6c5i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📊</span>Checkpoint 6 — Cylinder Dashboard Metrics</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c6i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Total cylinders — all registered, non-scrapped cylinders</div><div class="notes-area"><textarea data-note="s6c6i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c6i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">By fill status — count of FULL / EMPTY / PARTIAL / NEEDS_INSPECTION</div><div class="notes-area"><textarea data-note="s6c6i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c6i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">By operational status — count of IN_STOCK / IN_TRANSIT / SOLD / SCRAPPED</div><div class="notes-area"><textarea data-note="s6c6i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c6i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Needs inspection — count of cylinders past inspection due date</div><div class="notes-area"><textarea data-note="s6c6i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c6i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Ready for dispatch — cylinders that are IN_STOCK + FULL</div><div class="notes-area"><textarea data-note="s6c6i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c6i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">By location — filter cylinder list by warehouse showing all cylinders at specific location</div><div class="notes-area"><textarea data-note="s6c6i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">👤</span>Checkpoint 7 — Customer Cylinder Accountability</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c7i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Customer ID recorded on serial number record upon delivery</div><div class="notes-area"><textarea data-note="s6c7i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c7i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Delivery reference and sale date recorded</div><div class="notes-area"><textarea data-note="s6c7i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c7i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder can only be collected as empty return from same customer it was delivered to — cross-customer swaps blocked</div><div class="notes-area"><textarea data-note="s6c7i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s6c7i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">If cylinder has no registered customer ID but is in SOLD status, collection blocked and data integrity issue flagged</div><div class="notes-area"><textarea data-note="s6c7i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary-box">
+            <h3>Summary of Key Business Rules (Non-Bypassable)</h3>
+            <ul>
+                <li>Empty cylinders cannot be dispatched. Only FULL cylinders can be scanned onto a trip.</li>
+                <li>Cylinders from wrong locations cannot be loaded. A cylinder must physically be at the trip's source warehouse.</li>
+                <li>Vehicle capacity cannot be exceeded. The number of scanned cylinders cannot exceed the vehicle's registered capacity.</li>
+                <li>All ordered cylinders must be scanned before departure. The truck cannot depart until every expected cylinder is accounted for.</li>
+                <li>Empty returns must belong to the delivering customer. Cross-customer return collection is prevented at the technical level.</li>
+                <li>Cylinders needing inspection cannot be filled. The NEEDS_INSPECTION flag blocks a cylinder from re-entering the fill queue.</li>
+                <li>Filling sessions cannot complete if any cylinder result is outstanding. Every cylinder must be either filled or rejected.</li>
+                <li>Payment amounts cannot exceed outstanding balances. Overpayments are rejected.</li>
+                <li>Split payment totals must exactly equal the transaction amount. Rounding differences beyond 0.01 are rejected.</li>
+                <li>Dispatch orders on trips cannot be directly completed. The trip completion workflow must be used to ensure all cylinders are accounted for.</li>
+            </ul>
+        </div>
+
+        <div class="signatures">
+            <div class="signature-block">
+                <label>Presenter Signature</label>
+                <div class="signature-line"></div>
+                <input type="text" placeholder="Name & Date">
+            </div>
+            <div class="signature-block">
+                <label>Client Representative Signature</label>
+                <div class="signature-line"></div>
+                <input type="text" placeholder="Name & Date">
+            </div>
+            <div class="signature-block">
+                <label>Technical Observer Signature</label>
+                <div class="signature-line"></div>
+                <input type="text" placeholder="Name & Date">
+            </div>
+        </div>
+
+        <div class="footer-actions">
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save as PDF</button>
+            <button class="btn btn-secondary" onclick="uncheckAll()">↩️ Reset All Checkboxes</button>
+            <button class="btn btn-success" onclick="checkAll()">✅ Mark All as Seen</button>
+            <button class="btn btn-warning" onclick="clearStorage()">🗑️ Clear Saved Data</button>
+        </div>
+
+        <div class="serve-options">
+            <h3>📡 How to Serve This Checklist</h3>
+            <ol>
+                <li><strong>GitHub Pages (Recommended — Free & Professional)</strong><br>Push this file to a GitHub repo → Settings → Pages → Select main branch. You get a URL like <code>https://your-org.github.io/futuregas-demo-checklist/</code>. State persists per browser. Easy to version control and share.</li>
+                <li><strong>Netlify Drop (Fastest — Drag & Drop)</strong><br>Go to <code>app.netlify.com/drop</code> → drag this HTML file onto the page. Instant public URL, HTTPS, CDN. No account required for basic use.</li>
+                <li><strong>Vercel (Developer-Friendly)</strong><br>Similar to Netlify. Import from GitHub or drag-drop via <code>vercel.com</code>. Great if you already use Vercel for other projects.</li>
+                <li><strong>AWS S3 + CloudFront (Enterprise)</strong><br>Upload to an S3 bucket with static website hosting enabled. Front with CloudFront for HTTPS and global CDN. Best if you're already in AWS.</li>
+                <li><strong>Internal Web Server (Nginx / Apache / IIS)</strong><br>Drop the file into your existing internal web server's public directory. No external dependencies, stays inside your network perimeter.</li>
+                <li><strong>SharePoint / Confluence / Notion</strong><br>Embed the HTML as a web part, or convert to a native page. Loses some interactivity but lives inside your existing collaboration tool.</li>
+                <li><strong>Local File (Quick & Dirty)</strong><br>Just double-click the HTML file. Works offline. State saves to browser localStorage. Not shareable via URL but fine for personal use.</li>
+            </ol>
+        </div>
+    </div>
+
+    <script>
+        const STORAGE_KEY = 'futuregas_demo_checklist_v1';
+
+        function saveState() {
+            const state = {
+                meta: {
+                    client: document.getElementById('clientName').value,
+                    date: document.getElementById('demoDate').value,
+                    presenter: document.getElementById('presenter').value,
+                    duration: document.getElementById('demoDuration').value
+                },
+                checks: {},
+                notes: {}
+            };
+
+            document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => {
+                state.checks[cb.dataset.id] = cb.checked;
+            });
+
+            document.querySelectorAll('textarea[data-note]').forEach(ta => {
+                state.notes[ta.dataset.note] = ta.value;
+            });
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            showSaveIndicator();
+            updateProgress();
+        }
+
+        function loadState() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+
+            try {
+                const state = JSON.parse(raw);
+
+                if (state.meta) {
+                    document.getElementById('clientName').value = state.meta.client || '';
+                    document.getElementById('demoDate').value = state.meta.date || '';
+                    document.getElementById('presenter').value = state.meta.presenter || '';
+                    document.getElementById('demoDuration').value = state.meta.duration || '';
+                }
+
+                if (state.checks) {
+                    document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => {
+                        if (state.checks[cb.dataset.id] !== undefined) {
+                            cb.checked = state.checks[cb.dataset.id];
+                        }
+                    });
+                }
+
+                if (state.notes) {
+                    document.querySelectorAll('textarea[data-note]').forEach(ta => {
+                        if (state.notes[ta.dataset.note] !== undefined) {
+                            ta.value = state.notes[ta.dataset.note];
+                        }
+                    });
+                }
+
+                updateProgress();
+            } catch (e) {
+                console.error('Failed to load state', e);
+            }
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => indicator.classList.remove('show'), 1500);
+        }
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][data-id]');
+            const checked = document.querySelectorAll('input[type="checkbox"][data-id]:checked');
+            const percent = checkboxes.length > 0 ? Math.round((checked.length / checkboxes.length) * 100) : 0;
+            document.getElementById('overallProgress').style.width = percent + '%';
+            document.getElementById('progressText').textContent = percent + '%';
+
+            checkboxes.forEach(cb => {
+                const li = cb.closest('li');
+                if (cb.checked) {
+                    li.classList.add('checked');
+                } else {
+                    li.classList.remove('checked');
+                }
+            });
+        }
+
+        function uncheckAll() {
+            if (!confirm('Reset all checkboxes? Notes will be preserved.')) return;
+            document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => cb.checked = false);
+            saveState();
+        }
+
+        function checkAll() {
+            document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => cb.checked = true);
+            saveState();
+        }
+
+        function clearStorage() {
+            if (!confirm('Clear ALL saved data including notes? This cannot be undone.')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+
+        function toggleScenario(header) {
+            const body = header.nextElementSibling;
+            body.style.display = body.style.display === 'none' ? 'block' : 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.scenario-body').forEach(b => b.style.display = 'block');
+            loadState();
+        });
+    </script>
+</body>
+</html>
