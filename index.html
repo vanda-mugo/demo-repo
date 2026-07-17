@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Future Gaz ERP — Stakeholder Demo Checklist</title>
+    <title>FutureGas ERP — Stakeholder Demo Checklist</title>
     <style>
         :root {
             --primary: #1a5276;
@@ -156,6 +156,77 @@
             align-items: center;
             gap: 10px;
         }
+        /* ── Role-switch banner: who must be logged in for this checkpoint ── */
+        .role-switch {
+            background: #fff8f0;
+            border-left: 4px solid var(--accent);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 40px;
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            font-size: 0.88rem;
+        }
+        .role-switch .switch-label {
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+        .role-switch .switch-role {
+            font-weight: 700;
+            color: var(--primary);
+            background: #ffffff;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            padding: 2px 10px;
+        }
+        .role-switch .switch-hint {
+            color: #6c757d;
+            font-style: italic;
+            flex-basis: 100%;
+        }
+        .role-switch.multi-role { background: #f0f6fb; border-left-color: var(--secondary); }
+        .role-switch.multi-role .switch-label { color: var(--secondary); }
+        .role-switch.multi-role .switch-role { border-color: var(--secondary); }
+        /* ── Story box: the narrative that frames a scenario ── */
+        .story-box {
+            background: #fdfdfe;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--secondary);
+            padding: 20px 40px;
+            font-size: 0.9rem;
+            line-height: 1.65;
+        }
+        .story-box h4 {
+            color: var(--secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+        .story-box p { margin-bottom: 10px; }
+        .story-box p:last-child { margin-bottom: 0; }
+        .story-box .story-cast {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--border);
+        }
+        .story-box .story-cast div { margin-bottom: 6px; }
+        .story-box .story-cast .cast-role {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .story-box .story-warn {
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: #fff8f0;
+            border-left: 3px solid var(--accent);
+            font-size: 0.85rem;
+        }
         .checkpoint-title .icon { font-size: 1.1rem; }
 
         .checklist { list-style: none; padding: 0; }
@@ -294,6 +365,13 @@
             .btn, .footer-actions, .serve-options, .save-indicator { display: none !important; }
             .scenario { break-inside: avoid; box-shadow: none; border: 1px solid #dee2e6; }
             .notes-area textarea { border: 1px solid #ccc; }
+            /* The role banner is the point of the printed sheet — force its colour through */
+            .role-switch, .story-box {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                break-inside: avoid;
+            }
+            .checkpoint-group { break-inside: avoid; }
         }
 
         .summary-box {
@@ -322,7 +400,7 @@
 
     <div class="container">
         <header>
-            <h1>Future Gaz ERP — Stakeholder Demo Checklist</h1>
+            <h1>FutureGas ERP — Stakeholder Demo Checklist</h1>
             <div class="subtitle">System Validation & Business Logic Walkthrough | April 2026</div>
         </header>
 
@@ -717,6 +795,200 @@
             </div>
         </div>
 
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>Scenario 7 — Bulk Gas Batch: Receipt → Dual Fill → Deplete (Role-Aware)</h2>
+                <span class="badge">10 Checkpoints</span>
+            </div>
+            <div class="scenario-body">
+                <div class="story-box">
+                    <h4>📖 The Story — read this before you start testing</h4>
+                    <p><strong>Tuesday, 06:40.</strong> A road tanker pulls into the plant carrying roughly 33 tonnes of LPG that Future Gaz has already committed to buy. It rolls onto the weigh-bridge loaded, offloads into the big storage tank, and rolls back on empty. The difference between those two weights is the gas — and it is the only honest number in the whole transaction. Everything downstream is built on it.</p>
+                    <p>That gas now sits in the tank as a <strong>batch</strong>: one lot the plant will work through until it runs dry. Over the next few days it gets pulled in two completely different directions. Some of it goes into a <strong>bobtail tanker</strong> — a truck that drives bulk gas out to customers and pumps it into their tanks on site. The rest goes onto the <strong>filling line</strong>, packed into 50 kg cylinders that go out on delivery trips. Same tank, same batch, two different businesses drinking from it.</p>
+                    <p>Eventually the tank runs dry and someone walks out with a torch, reads the gauge on the side of it, and says: <em>that's it, it's finished.</em> That moment is the <strong>deplete</strong>, and it is the moment of truth. The system knows what it received and what it says it dispensed. The gauge knows what is physically left. Subtract one from the other and you get the number nobody wants to discuss: <strong>how much gas went missing.</strong></p>
+                    <p><strong>Why this scenario is built the way it is.</strong> LPG is easy to lose and easy to steal, and every loss looks like an honest measurement error until proven otherwise. So the controls are not really about arithmetic — they are about making sure no single person can both move gas and sign off on the movement. That is why you will be logging in and out constantly. <em>The role switching is not demo choreography. It is the thing being tested.</em></p>
+                    <div class="story-cast">
+                        <div><span class="cast-role">Dispatcher</span> — runs the plant's paperwork. Keys the weigh-bridge figures, logs the daily gauge readings, checks the driver's refill, and closes the batch at the end. Cannot accept a delivery.</div>
+                        <div><span class="cast-role">Station Manager</span> — the accepting authority. Says yes to the delivery and yes to letting a bobtail take gas. Signs off; does not operate.</div>
+                        <div><span class="cast-role">Driver</span> — asks for gas for their tanker and records what physically went in. Sees their own truck and nothing else.</div>
+                        <div><span class="cast-role">Accountant</span> — the commercial gate. Approves the customer orders (bobtail and 50 kg) that this gas is sold against, and sees the ledger. Never touches the plant.</div>
+                        <div><span class="cast-role">Bulk Gas Operator / Approver</span> — optional split, if the business wants bulk gas delegated away from the dispatcher/manager. Operator does, Approver signs.</div>
+                    </div>
+                    <div class="story-warn">
+                        <strong>⚠️ Before you begin — do not run this scenario as a tenant-admin.</strong> Admin accounts hold wildcard permissions and can do everything, which makes every gate below invisible and the whole scenario worthless. You need <strong>five separate logins</strong>, and you will switch between them roughly a dozen times. Have them all ready — ideally on separate devices, or at minimum with fast logout/login — before the stakeholders sit down.
+                    </div>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">👥</span>Checkpoint 1 — Test Accounts &amp; Role Setup</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Tenant Admin (setup only)</span>
+                        <span class="switch-hint">Setup step, done before the demo. This is the one and only checkpoint where an admin account is correct — you are creating the five test users here, not testing with them. Log out afterwards.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Five separate logins prepared before the demo — Dispatcher, Station Manager, Accountant, Driver, and one of Bulk Gas Operator / Bulk Gas Approver. Do not test with a tenant-admin: its wildcard permissions hide every gate below.</div><div class="item-note">Setup — required for the whole scenario</div><div class="notes-area"><textarea data-note="s7c1i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Station Manager holds <em>inventory.bulk_gas.approve</em>; Dispatcher does <strong>not</strong>. This is the separation of duties the whole receipt flow rests on — the person who keys the weigh-bridge figures cannot be the person who accepts them.</div><div class="item-note">Role: Station Manager vs Dispatcher</div><div class="notes-area"><textarea data-note="s7c1i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Accountant holds <em>sales.orders.confirm</em> — they approve the orders, not the gas — and <strong>no</strong> <em>inventory.bulk_gas.*</em> permission, not even read. This is the intended boundary, not a gap: gas movement inside the plant is not the Accountant's function.</div><div class="item-note">Role: Accountant — expected to be blocked from Bulk Gas by design</div><div class="notes-area"><textarea data-note="s7c1i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c1i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Driver holds no bulk gas permission either — only <em>inventory.bobtail_filling.create</em> and <em>.read</em>. A driver can ask for gas and record what went in; they cannot see the tank's books.</div><div class="item-note">Role: Driver — expected to be blocked from Bulk Gas</div><div class="notes-area"><textarea data-note="s7c1i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c1i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">The two delegable roles behave as opposites: Bulk Gas Operator = read + create, no approve. Bulk Gas Approver = read + approve, no create. Neither can do the other's half.</div><div class="item-note">Role: Bulk Gas Operator / Approver</div><div class="notes-area"><textarea data-note="s7c1i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">⚖️</span>Checkpoint 2 — Purchase Order &amp; Weigh-Bridge Receipt</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Dispatcher</span>
+                        <span class="switch-hint">The tanker is on the weigh-bridge and you are the person with the clipboard. You are recording what arrived — you are not the person who gets to accept it. Stay in this account for the whole checkpoint; the last item asks you to try (and fail) to accept your own delivery.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Receipt is raised against an existing Purchase Order — bulk gas cannot be received without the PO that authorised the delivery.</div><div class="item-note">Role: Dispatcher</div><div class="notes-area"><textarea data-note="s7c2i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Two weigh-bridge readings captured — gross weight of the loaded tanker at origin, tare weight of the empty tanker after offload. Net (gross − tare) becomes the authoritative quantity added to the tank; the operator does not type the quantity directly.</div><div class="item-note">Role: Dispatcher</div><div class="notes-area"><textarea data-note="s7c2i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Total cost auto-calculates as quantity × unit cost per kg — the figure is never hand-keyed.</div><div class="item-note">Role: Dispatcher</div><div class="notes-area"><textarea data-note="s7c2i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Draft receipt can be edited and cancelled while still in DRAFT.</div><div class="item-note">Role: Dispatcher</div><div class="notes-area"><textarea data-note="s7c2i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c2i5" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Dispatcher cannot confirm their own receipt</strong> — the Confirm action is absent from their screen. Confirm the gate is real, not cosmetic: a direct API call to the confirm endpoint as the Dispatcher must be refused (403), not merely hidden in the UI.</div><div class="item-note">Role: Dispatcher — expected to be blocked</div><div class="notes-area"><textarea data-note="s7c2i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">✅</span>Checkpoint 3 — Receipt Approval &amp; the GL Posting</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Switch from Dispatcher to</span>
+                        <span class="switch-role">Station Manager</span>
+                        <span class="switch-hint">Log out of the Dispatcher account and log in as the Station Manager. Open the exact same draft receipt you just left. The screen is the same; the buttons are not. Screenshot both and put them side by side — this pair of images is the clearest proof of separation of duties in the entire demo.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Station Manager opens the same draft receipt the Dispatcher left and now sees a Confirm action. Same screen, same record, different affordance — capture both screenshots side by side.</div><div class="item-note">Role: Station Manager</div><div class="notes-area"><textarea data-note="s7c3i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">On confirm the tank level rises by the net quantity, and the receipt records the tank level before and after as a permanent audit trail.</div><div class="item-note">Role: Station Manager</div><div class="notes-area"><textarea data-note="s7c3i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">A GRNI (Goods Received Not Invoiced) journal entry is created and its reference stored on the receipt.</div><div class="item-note">Role: Station Manager confirms → Accountant verifies in GL</div><div class="notes-area"><textarea data-note="s7c3i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c3i4" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Deliberate design point to raise with stakeholders:</strong> the GRNI posting is non-blocking. If the journal entry fails, the receipt still confirms and the gas still lands in the tank — the failure is logged, not surfaced to the operator. Verify the receipt carries a journal reference; a confirmed receipt without one means the GL silently missed it.</div><div class="item-note">Role: Accountant — the check that matters most for this role</div><div class="notes-area"><textarea data-note="s7c3i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c3i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Confirmed receipt can no longer be edited — corrections must go through an adjustment, leaving the original intact.</div><div class="item-note">Role: Station Manager / Dispatcher</div><div class="notes-area"><textarea data-note="s7c3i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📦</span>Checkpoint 4 — Batch Opens and Tops Up</div>
+                    <div class="role-switch multi-role">
+                        <span class="switch-label">🔄 Two roles, switching</span>
+                        <span class="switch-role">Dispatcher</span>
+                        <span class="switch-role">Station Manager</span>
+                        <span class="switch-hint">Observe the new batch as either role — both can see the Bulk Gas hub. But to prove the top-up rule you must run the full two-person cycle again: log in as <strong>Dispatcher</strong> to raise a second receipt, then switch to <strong>Station Manager</strong> to confirm it. Watch the batch afterwards — the received total should rise on the batch that already exists.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c4i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Confirming the first receipt after a deplete opens a new batch automatically, numbered BGB-YYYY-NNNN. Nobody creates a batch by hand.</div><div class="item-note">Role: Dispatcher / Station Manager — observe on Bulk Gas hub</div><div class="notes-area"><textarea data-note="s7c4i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c4i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Opening stock is set to whatever was left in the tank when the batch opened — the carry-over remainder from the previous batch, not zero.</div><div class="item-note">Role: Dispatcher</div><div class="notes-area"><textarea data-note="s7c4i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c4i3" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Confirm a second receipt while the batch is still open.</strong> It must top up the existing batch's received total — it must <em>not</em> open a second batch. This is the core batch rule and the easiest one to break.</div><div class="item-note">Role: Dispatcher creates → Station Manager confirms</div><div class="notes-area"><textarea data-note="s7c4i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c4i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">At most one OPEN batch exists per tank at any moment. Check the batch list filtered to Open — exactly one row for the tank under test.</div><div class="item-note">Role: Dispatcher</div><div class="notes-area"><textarea data-note="s7c4i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🚛</span>Checkpoint 5 — Bobtail Refill Drawn from the Batch</div>
+                    <div class="role-switch multi-role">
+                        <span class="switch-label">🔄 Four role switches — in this exact order</span>
+                        <span class="switch-role">1. Driver</span>
+                        <span class="switch-role">2. Station Manager</span>
+                        <span class="switch-role">3. Driver</span>
+                        <span class="switch-role">4. Dispatcher</span>
+                        <span class="switch-hint">This is the most role-heavy checkpoint in the guide and the order is not negotiable — the session physically cannot advance out of turn. <strong>Driver</strong> requests the refill → <strong>Station Manager</strong> approves it → <strong>Driver</strong> (log back in) records what went into the truck → <strong>Dispatcher</strong> verifies it independently. Four hands, three people, one tanker of gas. As you switch, check each account for buttons that should <em>not</em> be there: the Driver must never see Approve or Verify.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Driver requests a refill against the batch's source tank; session opens as REQUESTED with number BFS-YYYY-NNNN. Source tank must be ACTIVE or the request is refused.</div><div class="item-note">Role: Driver — step 1 of 4</div><div class="notes-area"><textarea data-note="s7c5i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Only one active refill session per tanker — a second request while one is live is refused and names the existing session number.</div><div class="item-note">Role: Driver</div><div class="notes-area"><textarea data-note="s7c5i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Station Manager approves the request → APPROVED. The Driver's own screen for the same session shows no Approve button. The tank is re-validated at approval in case it went out of service since the request.</div><div class="item-note">Role: Station Manager — step 2 of 4</div><div class="notes-area"><textarea data-note="s7c5i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Driver records the fill, choosing the measurement method once: rota gauge (%) via the tanker's calibration chart, or onboard flow-meter (litres). The method is fixed at this moment for the rest of the session.</div><div class="item-note">Role: Driver — step 3 of 4</div><div class="notes-area"><textarea data-note="s7c5i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Closing reading must exceed opening — a fill raises the level. Try to record a closing below opening and confirm it is refused in plain language.</div><div class="item-note">Role: Driver — negative test</div><div class="notes-area"><textarea data-note="s7c5i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tanker capacity is checked before any gas moves — a reading that would put more on the tanker than it holds is refused with the tanker's registration and its capacity named, and the tank is not debited.</div><div class="item-note">Role: Driver — negative test</div><div class="notes-area"><textarea data-note="s7c5i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i7" onchange="saveState()"></div><div class="item-content"><div class="item-text">Overfill past the 85% safe limit <strong>warns and flags but never blocks</strong> — the physical reading reflects reality and the system records it. Confirm the flag is visible to the Station Manager and Dispatcher, not just stored.</div><div class="item-note">Role: Driver records → Station Manager / Dispatcher observe</div><div class="notes-area"><textarea data-note="s7c5i7" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i8" onchange="saveState()"></div><div class="item-content"><div class="item-text">A session cannot be filled twice — a second record-fill on the same session is refused and quotes the quantity already recorded.</div><div class="item-note">Role: Driver — negative test</div><div class="notes-area"><textarea data-note="s7c5i8" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i9" onchange="saveState()"></div><div class="item-content"><div class="item-text">Dispatcher verifies the fill — and is forced to re-read using whichever method the Driver used. A gauge-filled session demands gauge percentages; a meter-filled session demands litres. The verifier cannot switch methods.</div><div class="item-note">Role: Dispatcher — step 4 of 4. Driver has no Verify button.</div><div class="notes-area"><textarea data-note="s7c5i9" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c5i10" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Regression test — enter a deliberately wrong verification figure.</strong> When the Dispatcher's reading disagrees with the Driver's fill by more than 50 kg, the session is flagged and the tanker's books are <em>left where the Driver's fill put them</em>. A flagged reading is by definition untrusted, so the system must not settle stock on it. Previously a single mis-typed number wrote off ~1,985 kg of real gas this way.</div><div class="item-note">Role: Dispatcher — the highest-value test in this scenario</div><div class="notes-area"><textarea data-note="s7c5i10" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🛢️</span>Checkpoint 6 — 50 kg Cylinder Filling from the <em>Same</em> Batch</div>
+                    <div class="role-switch multi-role">
+                        <span class="switch-label">🔄 Try ALL FIVE — that is the test</span>
+                        <span class="switch-role">Dispatcher</span>
+                        <span class="switch-role">Station Manager</span>
+                        <span class="switch-role">Driver</span>
+                        <span class="switch-role">Accountant</span>
+                        <span class="switch-role">Bulk Gas Operator</span>
+                        <span class="switch-hint">Unusually, this checkpoint has no single correct role — <strong>finding out who can do it is the point.</strong> Cylinder filling is gated on a different permission family from everything else in this scenario, so log in as each of the five in turn and simply record who can reach the filling screen at all. You may well find that <em>nobody</em> you have used so far can, and that the plant operator who runs the filling line is a sixth person this scenario never mentions. That answer is the finding.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c6i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Without depleting, open a cylinder filling session drawing from the same tank, and fill a handful of 50 kg cylinders. Both consumers now feed off one batch.</div><div class="item-note">Role: whoever holds inventory.adjustments.create — see next item</div><div class="notes-area"><textarea data-note="s7c6i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c6i2" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Establish who can actually do this — it is not the same people as above.</strong> Cylinder filling is gated on <em>inventory.adjustments.*</em>, a different permission family from the <em>inventory.bulk_gas.*</em> used everywhere else in this scenario. The Dispatcher and Station Manager are not expected to hold it. Log in as each of the five test users and record who reaches the filling screen at all.</div><div class="item-note">Role: ALL FIVE — deliberate divergence, confirm it is intended</div><div class="notes-area"><textarea data-note="s7c6i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c6i3" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Note the asymmetry against bobtail filling and put it to stakeholders.</strong> A bobtail refill needs four hands: request, approve, fill, verify. A cylinder filling session needs one permission — whoever can start a session can also fill, reject, complete, and cancel it, with no approval and no second reading. Same gas, same batch, two very different control regimes.</div><div class="item-note">Role: business decision — not a defect, a design question</div><div class="notes-area"><textarea data-note="s7c6i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c6i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Session cannot complete while any cylinder is still outstanding — every cylinder must be either filled or rejected first.</div><div class="item-note">Role: filling operator — negative test</div><div class="notes-area"><textarea data-note="s7c6i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🧮</span>Checkpoint 7 — Batch Draw-Down Cross-Check</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Dispatcher</span>
+                        <span class="switch-hint">Station Manager or Bulk Gas Operator work equally well here — any role holding bulk gas read can see these figures. Use the Dispatcher for consistency with the checkpoints either side of this one. No role switching needed within this checkpoint; it is pure observation and arithmetic.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c7i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">The batch's total filled figure includes <strong>both</strong> the bobtail refill and the cylinder fills. Add the two by hand and confirm the batch total matches — this is the single number the deplete calculation will lean on.</div><div class="item-note">Role: Dispatcher / Station Manager</div><div class="notes-area"><textarea data-note="s7c7i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c7i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Batch detail shows the draw-down broken out so the two sources are distinguishable, not merged into one opaque total.</div><div class="item-note">Role: Dispatcher</div><div class="notes-area"><textarea data-note="s7c7i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c7i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Log a daily rota-gauge reading against the open batch and confirm the variance it reports is between the physical gauge and the system's expected level — the early-warning signal before deplete.</div><div class="item-note">Role: Dispatcher / Bulk Gas Operator</div><div class="notes-area"><textarea data-note="s7c7i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📉</span>Checkpoint 8 — Declare Deplete</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Dispatcher</span>
+                        <span class="switch-hint">Bulk Gas Operator gives the identical result — deliberately so, and worth demonstrating if the business is considering delegating this. <strong>Notice what does not happen here:</strong> no second login, no approval, no Station Manager. The Dispatcher books the loss alone. Keep the Station Manager and Accountant in the room as witnesses to the arithmetic even though the system asks nothing of them.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c8i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Run the tank down until it is effectively dry, then declare deplete with the final physical gauge reading. The gauge percentage is converted to kg against the tank's capacity.</div><div class="item-note">Role: Dispatcher / Bulk Gas Operator</div><div class="notes-area"><textarea data-note="s7c8i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c8i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Loss/gain is computed as <em>(opening stock + received − final gauge) − total filled</em>. Work it through on paper with the demo's own figures before revealing the system's number — a positive result is a loss, negative is a gain. Stakeholders should see the arithmetic, not just trust it.</div><div class="item-note">Role: Dispatcher presents → Station Manager / Accountant witness</div><div class="notes-area"><textarea data-note="s7c8i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c8i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">The tank's system level is reconciled to the final physical gauge, writing a visible loss/adjustment transaction against the tank — the gap between books and reality is recorded, never quietly absorbed.</div><div class="item-note">Role: Dispatcher</div><div class="notes-area"><textarea data-note="s7c8i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c8i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Only an OPEN batch can be depleted — attempt to deplete the same batch twice and confirm the second attempt is refused by name and status rather than double-counting the loss.</div><div class="item-note">Role: Dispatcher — negative test</div><div class="notes-area"><textarea data-note="s7c8i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c8i5" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Raise with stakeholders:</strong> declaring deplete needs only the <em>create</em> permission, not <em>approve</em>. The Dispatcher or Bulk Gas Operator closes the batch and books the loss <em>unilaterally</em> — no second signature, unlike the receipt that opened it. Confirm the business accepts a one-person close on the number that becomes the loss figure.</div><div class="item-note">Role: Dispatcher — governance gap to confirm or close</div><div class="notes-area"><textarea data-note="s7c8i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c8i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">Confirm the next receipt after deplete opens a fresh batch, with its opening stock set to the remainder the deplete left behind — closing the loop back to Checkpoint 4.</div><div class="item-note">Role: Dispatcher creates → Station Manager confirms</div><div class="notes-area"><textarea data-note="s7c8i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">👁️</span>Checkpoint 9 — Role Visibility Matrix (Same Screen, Different Eyes)</div>
+                    <div class="role-switch multi-role">
+                        <span class="switch-label">🔄 All five, one after another</span>
+                        <span class="switch-role">Dispatcher</span>
+                        <span class="switch-role">Station Manager</span>
+                        <span class="switch-role">Driver</span>
+                        <span class="switch-role">Accountant</span>
+                        <span class="switch-role">Bulk Gas Operator</span>
+                        <span class="switch-hint">Do this as one unbroken sitting, five logins back to back, with the batch from this scenario already on screen. For each role visit the <strong>same three places</strong> — Inventory tab, Bulk Gas hub, batch detail — and screenshot each. Do not fix anything, do not explore; just log in, capture, log out, next. The deliverable is a single comparison sheet, and it only works if the five captures are of identical screens.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c9i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Method: with the batch from this scenario on screen, log in as each of the five roles in turn and screenshot the <em>same</em> three places — the Inventory tab, the Bulk Gas hub, and the batch detail. The deliverable is one comparison sheet.</div><div class="item-note">Role: ALL FIVE — run this as one continuous pass</div><div class="notes-area"><textarea data-note="s7c9i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c9i2" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Dispatcher</strong> — reaches the Bulk Gas hub, sees receipts, batches and rota readings, can raise a receipt, can Declare Deplete. No Confirm on any draft receipt.</div><div class="item-note">Role: Dispatcher — expected view</div><div class="notes-area"><textarea data-note="s7c9i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c9i3" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Station Manager</strong> — same hub as the Dispatcher plus Confirm on receipts and Approve on bobtail refills. Expected to have no route into cylinder filling (per Checkpoint 6).</div><div class="item-note">Role: Station Manager — expected view</div><div class="notes-area"><textarea data-note="s7c9i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c9i4" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Driver</strong> — no Bulk Gas hub at all. Sees only their own refill session: request it, record the fill, nothing more. No tank level, no batch, no Verify.</div><div class="item-note">Role: Driver — expected view</div><div class="notes-area"><textarea data-note="s7c9i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c9i5" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Accountant</strong> — no Bulk Gas hub, no batch, no receipt screens, and that is correct: their gate is the sales order, not the gas. What they must see instead is the Sales tab and the approval queue — tested in Checkpoint 10.</div><div class="item-note">Role: Accountant — expected view</div><div class="notes-area"><textarea data-note="s7c9i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c9i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">Actions a role cannot perform are <strong>absent, not greyed out</strong> — no disabled buttons dangling without explanation.</div><div class="item-note">Role: ALL FIVE — UI consistency</div><div class="notes-area"><textarea data-note="s7c9i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c9i7" onchange="saveState()"></div><div class="item-content"><div class="item-text">Hiding is not the defence — the server is. For at least one blocked action per role, call the endpoint directly and confirm it is refused server-side. The UI gate and the API gate must agree.</div><div class="item-note">Role: ALL FIVE — security check</div><div class="notes-area"><textarea data-note="s7c9i7" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">💷</span>Checkpoint 10 — The Accountant: Commercial Gate, Not Physical</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Accountant</span>
+                        <span class="switch-hint">Stay in this one account for the whole checkpoint. Everything below must be reachable <em>from the Accountant's own navigation</em> — if you find yourself reaching for another login to make something work, that is a finding, not a workaround. You will need a SUBMITTED bobtail order and a SUBMITTED 50 kg order waiting in the queue, so raise those as a sales agent beforehand.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c10i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">The Accountant sits at the front and back of this flow, never the middle: they approve the sales orders that create demand for the gas, and they see the ledger consequences. The plant's gas movement in between is not theirs.</div><div class="item-note">Role: Accountant — orientation for the room</div><div class="notes-area"><textarea data-note="s7c10i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c10i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Sales tab is reachable and the approval queue lists orders awaiting a decision — <strong>both bobtail and 50 kg field orders</strong>. The Accountant is the approver for both.</div><div class="item-note">Role: Accountant — front of the flow</div><div class="notes-area"><textarea data-note="s7c10i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c10i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Approve moves a SUBMITTED order forward to CONFIRMED and available to dispatch. Reject works too and demands a reason — one permission gates both, so an Accountant who can approve can always reject.</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s7c10i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c10i4" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Regression test.</strong> Accountants once held the approve permission but were never granted access to the Sales tab, so they had no route to the approve/reject buttons at all — rejection was reported as "broken" when the method always worked. Confirm the Accountant reaches the queue <em>in the app as shipped</em>, not just that the permission exists on paper.</div><div class="item-note">Role: Accountant — previously a live defect</div><div class="notes-area"><textarea data-note="s7c10i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c10i5" onchange="saveState()"></div><div class="item-content"><div class="item-text">Debtor report available at the point of decision — credit limit, outstanding balance, aging. The Accountant approves against the customer's position, not blind.</div><div class="item-note">Role: Accountant — see also Scenario 1, Checkpoint 2</div><div class="notes-area"><textarea data-note="s7c10i5" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c10i6" onchange="saveState()"></div><div class="item-content"><div class="item-text">Back of the flow — the GRNI entry raised on receipt confirmation is reachable from the ledger and ties back to the delivery, and the cost of gas issued to cylinders and the bobtail reaches the accounts.</div><div class="item-note">Role: Accountant — back of the flow</div><div class="notes-area"><textarea data-note="s7c10i6" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s7c10i7" onchange="saveState()"></div><div class="item-content"><div class="item-text">The boundary holds: no Bulk Gas hub, no batch, no receipt screens. They see the bobtail <em>trip</em> they approved but not the bobtail <em>refill</em> that filled the tanker. If anyone asks the Accountant to reconcile the deplete loss during the demo, that is the wrong ask — it is an operations question for the Station Manager.</div><div class="item-note">Role: Accountant — confirm the line holds both ways</div><div class="notes-area"><textarea data-note="s7c10i7" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <div class="summary-box">
             <h3>Summary of Key Business Rules (Non-Bypassable)</h3>
             <ul>
@@ -730,6 +1002,15 @@
                 <li>Payment amounts cannot exceed outstanding balances. Overpayments are rejected.</li>
                 <li>Split payment totals must exactly equal the transaction amount. Rounding differences beyond 0.01 are rejected.</li>
                 <li>Dispatch orders on trips cannot be directly completed. The trip completion workflow must be used to ensure all cylinders are accounted for.</li>
+                <li>Bulk gas cannot be received without a Purchase Order. Every offload traces back to the order that authorised it.</li>
+                <li>The person who keys the weigh-bridge figures cannot accept them. Receipt entry and receipt confirmation are separate permissions held by different roles.</li>
+                <li>Received quantity is derived, not typed. Net weight (gross − tare) is what enters the tank.</li>
+                <li>One open batch per tank. A receipt confirmed while a batch is open tops that batch up; it cannot open a second.</li>
+                <li>A bobtail tanker cannot be filled twice on one session, cannot exceed its capacity, and cannot be filled from a tank that is out of service.</li>
+                <li>A bobtail refill is verified by someone other than the driver who filled it, re-reading by the same method the driver used.</li>
+                <li>A disputed verification never settles the books. Where the verifier's reading disagrees with the driver's fill beyond tolerance, the session is flagged and stock is left untouched.</li>
+                <li>Only an open batch can be depleted. A batch cannot be closed twice, so a loss cannot be double-counted.</li>
+                <li>Deplete reconciles the tank to the physical gauge and records the gap as a visible loss or gain. The difference between books and reality is never silently absorbed.</li>
             </ul>
         </div>
 
@@ -758,10 +1039,22 @@
             <button class="btn btn-warning" onclick="clearStorage()">🗑️ Clear Saved Data</button>
         </div>
 
+        <div class="serve-options">
+            <h3>📡 How to Serve This Checklist</h3>
+            <ol>
+                <li><strong>GitHub Pages (Recommended — Free & Professional)</strong><br>Push this file to a GitHub repo → Settings → Pages → Select main branch. You get a URL like <code>https://your-org.github.io/futuregas-demo-checklist/</code>. State persists per browser. Easy to version control and share.</li>
+                <li><strong>Netlify Drop (Fastest — Drag & Drop)</strong><br>Go to <code>app.netlify.com/drop</code> → drag this HTML file onto the page. Instant public URL, HTTPS, CDN. No account required for basic use.</li>
+                <li><strong>Vercel (Developer-Friendly)</strong><br>Similar to Netlify. Import from GitHub or drag-drop via <code>vercel.com</code>. Great if you already use Vercel for other projects.</li>
+                <li><strong>AWS S3 + CloudFront (Enterprise)</strong><br>Upload to an S3 bucket with static website hosting enabled. Front with CloudFront for HTTPS and global CDN. Best if you're already in AWS.</li>
+                <li><strong>Internal Web Server (Nginx / Apache / IIS)</strong><br>Drop the file into your existing internal web server's public directory. No external dependencies, stays inside your network perimeter.</li>
+                <li><strong>SharePoint / Confluence / Notion</strong><br>Embed the HTML as a web part, or convert to a native page. Loses some interactivity but lives inside your existing collaboration tool.</li>
+                <li><strong>Local File (Quick & Dirty)</strong><br>Just double-click the HTML file. Works offline. State saves to browser localStorage. Not shareable via URL but fine for personal use.</li>
+            </ol>
+        </div>
     </div>
 
     <script>
-        const STORAGE_KEY = 'futuregaz_demo_checklist_v1';
+        const STORAGE_KEY = 'futuregas_demo_checklist_v1';
 
         function saveState() {
             const state = {
