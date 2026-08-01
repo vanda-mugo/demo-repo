@@ -993,6 +993,145 @@
             </div>
         </div>
 
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>Scenario 8 — Revenue Recognition &amp; the Ledger (Bobtail &amp; 50 kg)</h2>
+                <span class="badge">8 Checkpoints</span>
+            </div>
+            <div class="scenario-body">
+                <div class="story-box">
+                    <h4>📖 The Story — read this before you start testing</h4>
+                    <p>Gas has left the plant on a delivery. The physical side is done — cylinders on a customer's step, or bulk pumped into their tank. But a delivery is also a <strong>financial</strong> event, and this scenario is about the half nobody sees: the moment the books move.</p>
+                    <p>The instant a delivery is confirmed, the system does two things to the ledger, automatically, with no accountant typing anything. It recognises the <strong>cost</strong> of what left (Cost of Goods Sold, against inventory) and it recognises the <strong>revenue</strong> owed (Accounts Receivable, against sales revenue and the VAT you now owe the taxman). Recognition happens <em>at delivery</em> — not when the order was raised, not at some month-end batch. Deliver the gas, and the money is on the books the same second.</p>
+                    <p>The two product lines get there slightly differently, and that difference is the heart of this scenario. A <strong>50 kg cylinder</strong> sale takes its cost from the stock movements that recorded the cylinders leaving the warehouse. A <strong>bobtail</strong> sale can't — bulk LPG isn't counted in stock the same way — so its cost is booked at the tanker's real blended price the moment gas is dispensed, and the delivery step is careful <em>not</em> to book it a second time. Same principle, two mechanisms.</p>
+                    <p><strong>Why this scenario matters.</strong> An ERP that gets the operations right but the ledger wrong is worse than useless — it lies to you with confidence. So the checks here are an accountant's checks: do the entries balance, do they trace back to a real delivery, does a payment land in the right kind of account, can anything post into a closed month, and — the big one — what happens when a posting fails. The answer to that last one is the whole reason to trust the system: <em>a bookkeeping hiccup never un-delivers gas, and it never hides.</em></p>
+                    <div class="story-cast">
+                        <div><span class="cast-role">Accountant</span> — the star of this scenario. Reads the journal entries, the general ledger, the trial balance; records customer payments. Verifies the books match the deliveries.</div>
+                        <div><span class="cast-role">Dispatcher</span> — confirms the 50 kg field delivery that triggers its posting.</div>
+                        <div><span class="cast-role">Bulk Gas Operator</span> / <span class="cast-role">Driver</span> — the bobtail sale's delivery is confirmed on the trip; whoever runs that trip triggers the bobtail posting.</div>
+                    </div>
+                    <div class="story-warn">
+                        <strong>⚠️ Recognition is automatic and asynchronous.</strong> Posting runs in a background worker, not inline with the delivery. After a delivery, the order's <strong>Accounting</strong> status moves <em>Pending → Posted</em> within moments; give it a few seconds and refresh before judging. You do not press a "post to ledger" button — if you're looking for one, you've misunderstood the design.
+                    </div>
+                </div>
+
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🧾</span>Checkpoint 1 — Setup &amp; Where Recognition Happens</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Accountant</span>
+                        <span class="switch-hint">Everything in this scenario is verified from the Accounting module (Journal Entries, General Ledger, Chart of Accounts, reports) — the Accountant can see all of it. You'll switch to a Dispatcher / trip role only to <em>trigger</em> deliveries in Checkpoints 2–3, then come straight back here.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">The chart of accounts holds the accounts this flow posts to: <strong>1200</strong> Accounts Receivable, <strong>1310</strong> Inventory, <strong>4000</strong> Sales Revenue, <strong>4100</strong> Shipping Revenue, <strong>5000</strong> Cost of Goods Sold, <strong>2110</strong> Output VAT Payable. Open Chart of Accounts and confirm each exists.</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s8c1i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Account codes are read from accounting settings, not hardcoded — the COGS, AR, revenue, shipping, output-VAT and inventory accounts are all configurable. Confirm the settings point at the accounts above.</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s8c1i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Recognition is at delivery, not order creation.</strong> Raise (or find) a confirmed order that has <em>not</em> yet been delivered and confirm its Accounting status is <strong>not</strong> Posted, and that no COGS/AR journal entries exist for it yet. Nothing hits the ledger until gas moves.</div><div class="item-note">Role: Accountant — baseline before the deliveries</div><div class="notes-area"><textarea data-note="s8c1i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📦</span>Checkpoint 2 — 50 kg Field Sale: COGS + AR at Delivery</div>
+                    <div class="role-switch multi-role">
+                        <span class="switch-label">🔄 Trigger then verify</span>
+                        <span class="switch-role">Dispatcher (deliver)</span>
+                        <span class="switch-role">Accountant (verify)</span>
+                        <span class="switch-hint">As the Dispatcher, confirm delivery of a 50 kg field order on its trip. Then switch to the Accountant, wait a few seconds, and read the ledger. The delivery is the trigger; the Accountant is the witness.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">On the delivered order, the <strong>Accounting</strong> status chip moves to <strong>Posted</strong> (via Pending) within moments of delivery confirmation.</div><div class="item-note">Role: Accountant — on the Sales Order detail</div><div class="notes-area"><textarea data-note="s8c2i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>COGS entry</strong> exists: debit <strong>5000</strong> Cost of Goods Sold, credit <strong>1310</strong> Inventory, for the <em>cost</em> of the cylinders (not the selling price). The cost is sourced from the stock movements that recorded the cylinders leaving the warehouse.</div><div class="item-note">Role: Accountant — Journal Entries</div><div class="notes-area"><textarea data-note="s8c2i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>AR entry</strong> exists: debit <strong>1200</strong> Accounts Receivable for the total owed, credit <strong>4000</strong> Sales Revenue (per line), credit <strong>4100</strong> Shipping if charged, credit <strong>2110</strong> Output VAT. This is the selling price, recognised as revenue.</div><div class="item-note">Role: Accountant — Journal Entries</div><div class="notes-area"><textarea data-note="s8c2i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Gross profit reads correctly: revenue (4000) minus COGS (5000) for this sale is the margin you expect. Spot-check it on the Income Statement, or by hand from the two entries.</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s8c2i4" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🚚</span>Checkpoint 3 — Bobtail Sale: COGS at Dispense, AR at Delivery, No Double-Count</div>
+                    <div class="role-switch multi-role">
+                        <span class="switch-label">🔄 Trigger then verify</span>
+                        <span class="switch-role">Bulk Gas Operator / Driver (deliver)</span>
+                        <span class="switch-role">Accountant (verify)</span>
+                        <span class="switch-hint">Run a bobtail sale delivery through its trip, then verify the ledger as the Accountant. This checkpoint proves the bobtail path differs from 50 kg — and that the difference doesn't double-book cost.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>COGS is booked at the tanker's real blended cost</strong> when gas is dispensed — kg dispensed × the tanker's onboard unit cost — not a catalogue costPrice × quantity. Confirm the COGS entry's amount matches the blended cost, debit <strong>5000</strong> / credit <strong>1310</strong>.</div><div class="item-note">Role: Accountant — the key bobtail difference</div><div class="notes-area"><textarea data-note="s8c3i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">The <strong>AR entry</strong> (DR 1200 / CR 4000 / CR 2110) posts at delivery, exactly as for 50 kg.</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s8c3i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Exactly ONE COGS entry for the bobtail sale.</strong> The delivery-time poster deliberately skips COGS for bobtail (it was already booked at dispense) — so there must be no second, duplicate COGS entry. Count them: one, not two.</div><div class="item-note">Role: Accountant — the no-double-count check</div><div class="notes-area"><textarea data-note="s8c3i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">⚖️</span>Checkpoint 4 — Entries Balance &amp; Trace</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Accountant</span>
+                        <span class="switch-hint">Pure ledger inspection — no role switching. Open each journal entry from the two sales above and the General Ledger / Trial Balance.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c4i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Every journal entry <strong>balances</strong>: total debits equal total credits, to the cent.</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s8c4i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c4i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Every entry <strong>traces to its source</strong> — each links back to the delivery / trip / invoice that produced it, so an auditor can go from a ledger line to the physical event.</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s8c4i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c4i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">The AR entry carries the <strong>customer</strong> — the receivable is attributable to a named debtor, not a faceless total. It shows against that customer in the General Ledger / aging.</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s8c4i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">💳</span>Checkpoint 5 — Payment Routing (Method ↔ Account)</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Accountant / Cashier</span>
+                        <span class="switch-hint">Record a customer payment against one of the invoices above and try to send it to the wrong kind of account.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c5i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">A <strong>cash</strong> payment must be received into a <strong>cash</strong> account (a till); <strong>mobile money</strong> into the M-Pesa / mobile-money account. Record one of each into its correct account and confirm it is accepted.</div><div class="item-note">Role: Accountant / Cashier</div><div class="notes-area"><textarea data-note="s8c5i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c5i2" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>A mismatch is refused.</strong> Try to receive a mobile-money payment into a cash till (or a cash payment into a bank account) and confirm the system rejects it — a payment method can only land in an account whose type matches.</div><div class="item-note">Role: Accountant / Cashier — negative test</div><div class="notes-area"><textarea data-note="s8c5i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c5i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">A recorded payment reduces the customer's outstanding balance / the AR for that invoice. Confirm the receivable moves after the payment.</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s8c5i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📅</span>Checkpoint 6 — Period Integrity</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Accountant</span>
+                        <span class="switch-hint">This one needs a closed accounting period to test against; if the demo tenant has no closed period, note it as "not demonstrable here" rather than skipping the concept.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c6i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Recognition lands on the <strong>order/delivery date</strong> — confirm the journal entry's date reflects when the sale happened, not just "today".</div><div class="item-note">Role: Accountant</div><div class="notes-area"><textarea data-note="s8c6i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c6i2" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Nothing posts into a closed period.</strong> If a delivery's natural date falls in a closed accounting period, the recognition date is moved forward to an open one rather than reopening a closed month. Confirm with stakeholders this matches their close policy.</div><div class="item-note">Role: Accountant — stakeholder confirmation</div><div class="notes-area"><textarea data-note="s8c6i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🛡️</span>Checkpoint 7 — Resilience: Delivery Never Blocked, Failure Never Hidden</div>
+                    <div class="role-switch">
+                        <span class="switch-label">🔄 Log in as</span>
+                        <span class="switch-role">Accountant</span>
+                        <span class="switch-hint">The single most important checkpoint in this scenario. It is about what happens when the ledger side goes wrong — because that is when a lesser system quietly corrupts its own books.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c7i1" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>A GL posting failure never rolls back a physical delivery.</strong> The gas still left, the delivery still completed — posting is fire-and-forget in a background worker. Confirm the operational record is never undone by an accounting problem.</div><div class="item-note">Role: Accountant — the core principle</div><div class="notes-area"><textarea data-note="s8c7i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c7i2" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Failure is visible, not silent.</strong> If posting keeps failing, the worker retries; when retries are exhausted the order's Accounting status becomes <strong>Failed</strong> — a flag for manual review, not a dropped entry. Confirm a Failed status is surfaced on the order (ask the dev team to force one in a test tenant if it can't be provoked in the demo).</div><div class="item-note">Role: Accountant — the safety net</div><div class="notes-area"><textarea data-note="s8c7i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c7i3" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Idempotent — no double-posting.</strong> Once an order is Posted, re-triggering (e.g. re-confirming, or the manual create-invoice path) does <em>not</em> create a second set of COGS/AR entries. Confirm the entry count doesn't grow on a repeat.</div><div class="item-note">Role: Accountant — negative test</div><div class="notes-area"><textarea data-note="s8c7i3" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">👁️</span>Checkpoint 8 — Role Visibility of the Ledger</div>
+                    <div class="role-switch multi-role">
+                        <span class="switch-label">🔄 Compare</span>
+                        <span class="switch-role">Accountant</span>
+                        <span class="switch-role">Dispatcher</span>
+                        <span class="switch-role">Driver</span>
+                        <span class="switch-hint">Confirm the ledger is the accountant's to see, and that operational roles see the consequence (the order's Accounting status) but not the journal entries themselves.</span>
+                    </div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c8i1" onchange="saveState()"></div><div class="item-content"><div class="item-text"><strong>Accountant</strong> reaches Journal Entries, General Ledger and reports. <strong>Dispatcher / Driver</strong> do not — no Accounting module for them.</div><div class="item-note">Role: Accountant vs Dispatcher / Driver</div><div class="notes-area"><textarea data-note="s8c8i1" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="s8c8i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Operational roles still see the <strong>outcome</strong> where it matters to them — the order's Accounting status chip (Pending / Posted / Failed) is visible on the Sales Order detail — without exposing the journal entries themselves.</div><div class="item-note">Role: Dispatcher — expected view</div><div class="notes-area"><textarea data-note="s8c8i2" placeholder="Notes / Evidence..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
         <div class="summary-box">
             <h3>Summary of Key Business Rules (Non-Bypassable)</h3>
             <ul>
@@ -1016,6 +1155,12 @@
                 <li>A disputed verification never settles the books. Where the verifier's reading disagrees with the operator's fill beyond tolerance, the session is flagged and stock is left untouched.</li>
                 <li>Only an open batch can be depleted. A batch cannot be closed twice, so a loss cannot be double-counted.</li>
                 <li>Deplete reconciles the tank to the physical gauge and records the gap as a visible loss or gain. The difference between books and reality is never silently absorbed.</li>
+                <li>Revenue and cost are recognised at delivery, automatically — cost of goods against inventory, receivable against revenue and output VAT. Not at order creation, not by a manual "post" step.</li>
+                <li>A GL posting failure never rolls back a physical delivery. It is retried, and if it still fails the order is flagged (Accounting = Failed) for manual review — never silently dropped.</li>
+                <li>The same delivery cannot post to the ledger twice. Once an order is Posted, re-triggering is a no-op.</li>
+                <li>Bobtail cost is booked once, at dispense, at the tanker's real blended cost; the delivery-time poster skips it to avoid double-counting.</li>
+                <li>A payment can only be received into an account whose type matches the method (cash → till, mobile money → paybill, etc.).</li>
+                <li>Nothing posts into a closed accounting period; the recognition date moves to an open one instead.</li>
             </ul>
         </div>
 
