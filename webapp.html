@@ -1,0 +1,859 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Future Gaz ERP — Web App Test Suite</title>
+    <style>
+        :root {
+            --primary: #1a5276;
+            --secondary: #2874a6;
+            --accent: #e67e22;
+            --success: #27ae60;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #2c3e50;
+            --border: #dee2e6;
+            --shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container { max-width: 1000px; margin: 0 auto; }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 30px 40px;
+            border-radius: 12px 12px 0 0;
+            box-shadow: var(--shadow);
+        }
+
+        header h1 { font-size: 1.8rem; margin-bottom: 8px; }
+        header .subtitle { opacity: 0.9; font-size: 0.95rem; }
+
+        .save-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--success);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            opacity: 0;
+            transition: opacity 0.3s;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        .save-indicator.show { opacity: 1; }
+
+        .meta-bar {
+            background: var(--card-bg);
+            padding: 20px 40px;
+            border-bottom: 2px solid var(--border);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .meta-field { display: flex; flex-direction: column; }
+        .meta-field label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+        .meta-field input {
+            border: none;
+            border-bottom: 2px solid var(--border);
+            padding: 6px 0;
+            font-size: 0.95rem;
+            color: var(--text);
+            background: transparent;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .meta-field input:focus { border-bottom-color: var(--secondary); }
+
+        .progress-section {
+            background: var(--card-bg);
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .progress-bar-container { display: flex; align-items: center; gap: 15px; }
+        .progress-bar {
+            flex: 1;
+            height: 10px;
+            background: #e9ecef;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 5px;
+        }
+        .progress-text {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--success);
+            min-width: 50px;
+            text-align: right;
+        }
+
+        .scenario {
+            background: var(--card-bg);
+            margin-top: 20px;
+            border-radius: 0;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        .scenario-header {
+            background: linear-gradient(135deg, var(--secondary), var(--primary));
+            color: white;
+            padding: 20px 40px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: opacity 0.2s;
+        }
+        .scenario-header:hover { opacity: 0.95; }
+        .scenario-header h2 { font-size: 1.15rem; font-weight: 600; }
+        .scenario-header .badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+        }
+        .scenario-body { padding: 0; }
+
+        .checkpoint-group { border-bottom: 1px solid var(--border); }
+        .checkpoint-group:last-child { border-bottom: none; }
+        .checkpoint-title {
+            background: #f1f3f5;
+            padding: 14px 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        /* ── Role-switch banner: who must be logged in for this checkpoint ── */
+        .role-switch {
+            background: #fff8f0;
+            border-left: 4px solid var(--accent);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 40px;
+            display: flex;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+            font-size: 0.88rem;
+        }
+        .role-switch .switch-label {
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+        .role-switch .switch-role {
+            font-weight: 700;
+            color: var(--primary);
+            background: #ffffff;
+            border: 1px solid var(--accent);
+            border-radius: 4px;
+            padding: 2px 10px;
+        }
+        .role-switch .switch-hint {
+            color: #6c757d;
+            font-style: italic;
+            flex-basis: 100%;
+        }
+        .role-switch.multi-role { background: #f0f6fb; border-left-color: var(--secondary); }
+        .role-switch.multi-role .switch-label { color: var(--secondary); }
+        .role-switch.multi-role .switch-role { border-color: var(--secondary); }
+        /* ── Story box: the narrative that frames a scenario ── */
+        .story-box {
+            background: #fdfdfe;
+            border: 1px solid var(--border);
+            border-left: 4px solid var(--secondary);
+            padding: 20px 40px;
+            font-size: 0.9rem;
+            line-height: 1.65;
+        }
+        .story-box h4 {
+            color: var(--secondary);
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 10px;
+        }
+        .story-box p { margin-bottom: 10px; }
+        .story-box p:last-child { margin-bottom: 0; }
+        .story-box .story-cast {
+            margin-top: 14px;
+            padding-top: 14px;
+            border-top: 1px dashed var(--border);
+        }
+        .story-box .story-cast div { margin-bottom: 6px; }
+        .story-box .story-cast .cast-role {
+            font-weight: 700;
+            color: var(--primary);
+        }
+        .story-box .story-warn {
+            margin-top: 14px;
+            padding: 10px 14px;
+            background: #fff8f0;
+            border-left: 3px solid var(--accent);
+            font-size: 0.85rem;
+        }
+        .checkpoint-title .icon { font-size: 1.1rem; }
+
+        .checklist { list-style: none; padding: 0; }
+        .checklist li {
+            padding: 14px 40px;
+            border-bottom: 1px solid #f1f3f5;
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+            transition: background 0.15s;
+        }
+        .checklist li:hover { background: #fafbfc; }
+        .checklist li:last-child { border-bottom: none; }
+        .checklist li.checked { background: #f0fff4; }
+        .checklist li.checked .item-text {
+            text-decoration: line-through;
+            color: #6c757d;
+        }
+
+        .checkbox-wrapper { position: relative; flex-shrink: 0; margin-top: 2px; }
+        .checkbox-wrapper input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            accent-color: var(--success);
+        }
+
+        .item-content { flex: 1; }
+        .item-text { font-size: 0.92rem; color: var(--text); }
+        .item-note {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 4px;
+            font-style: italic;
+        }
+        .notes-area { margin-top: 8px; }
+        .notes-area textarea {
+            width: 100%;
+            min-height: 40px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            resize: vertical;
+            font-family: inherit;
+            outline: none;
+        }
+        .notes-area textarea:focus { border-color: var(--secondary); }
+
+        .signatures {
+            background: var(--card-bg);
+            margin-top: 20px;
+            padding: 30px 40px;
+            box-shadow: var(--shadow);
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+        .signature-block { display: flex; flex-direction: column; }
+        .signature-block label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #6c757d;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .signature-line {
+            border-bottom: 2px solid var(--text);
+            height: 50px;
+            margin-bottom: 6px;
+        }
+        .signature-block input {
+            border: none;
+            border-bottom: 1px solid var(--border);
+            padding: 6px 0;
+            font-size: 0.9rem;
+            outline: none;
+            margin-top: 8px;
+        }
+
+        .footer-actions {
+            margin-top: 20px;
+            padding: 20px 40px;
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 10px 24px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--secondary); }
+        .btn-secondary { background: #e9ecef; color: var(--text); }
+        .btn-secondary:hover { background: #dee2e6; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-success:hover { background: #219a52; }
+        .btn-warning { background: var(--accent); color: white; }
+        .btn-warning:hover { background: #d35400; }
+
+        .serve-options {
+            background: var(--card-bg);
+            margin-top: 20px;
+            padding: 25px 40px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent);
+        }
+        .serve-options h3 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 12px;
+        }
+        .serve-options ol {
+            margin-left: 20px;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+        .serve-options li { margin-bottom: 8px; }
+        .serve-options code {
+            background: #f1f3f5;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+        }
+
+        @media print {
+            body { background: white; padding: 0; }
+            .btn, .footer-actions, .serve-options, .save-indicator { display: none !important; }
+            .scenario { break-inside: avoid; box-shadow: none; border: 1px solid #dee2e6; }
+            .notes-area textarea { border: 1px solid #ccc; }
+            /* The role banner is the point of the printed sheet — force its colour through */
+            .role-switch, .story-box {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                break-inside: avoid;
+            }
+            .checkpoint-group { break-inside: avoid; }
+        }
+
+        .summary-box {
+            background: var(--card-bg);
+            padding: 20px 40px;
+            margin-top: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--accent);
+        }
+        .summary-box h3 {
+            font-size: 1rem;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+        .summary-box ul {
+            margin-left: 20px;
+            font-size: 0.9rem;
+            color: var(--text);
+        }
+        .summary-box li { margin-bottom: 6px; }
+    </style>
+
+</head>
+<body>
+    <div class="save-indicator" id="saveIndicator">💾 Saved</div>
+
+    <div class="container">
+        <header>
+            <h1>Future Gaz ERP — Web App Manual Test Suite</h1>
+            <div class="subtitle">Browser client (futuregas-erp-pos) · module-by-module UAT · 80 checks</div>
+        </header>
+
+        <div style="background:#eaf3ec; border-left:4px solid #1e8449; padding:10px 16px; margin:0 0 4px; border-radius:0 6px 6px 0; font-size:0.9rem; color:#2c3e50;">
+            📱 Testing the mobile app instead? <a href="./" style="color:#1a5276; font-weight:600;">Open the Stakeholder Demo Checklist →</a>
+        </div>
+
+        <div class="meta-bar">
+            <div class="meta-field"><label>Tester</label><input type="text" id="clientName" placeholder="Your name..." oninput="saveState()"></div>
+            <div class="meta-field"><label>Test Date</label><input type="date" id="demoDate" oninput="saveState()"></div>
+            <div class="meta-field"><label>Browser</label><input type="text" id="presenter" placeholder="e.g. Chrome 126" oninput="saveState()"></div>
+            <div class="meta-field"><label>Build / Env</label><input type="text" id="demoDuration" placeholder="e.g. staging v1.4" oninput="saveState()"></div>
+        </div>
+
+        <div class="progress-section">
+            <div class="progress-bar-container">
+                <span style="font-size:0.85rem; font-weight:600; color:#6c757d;">Overall Progress</span>
+                <div class="progress-bar"><div class="progress-fill" id="overallProgress"></div></div>
+                <span class="progress-text" id="progressText">0%</span>
+            </div>
+        </div>
+
+        <div class="summary-box" style="margin-top:0">
+            <h3>How to use this suite</h3>
+            <p style="margin:6px 0 0; color:#5a6b73; font-size:0.92rem;">Work module by module against the live web app. Tick each check that passes and use the notes box to record evidence or a defect reference. Progress and notes save automatically in this browser. Test with a <strong>normal operational role</strong>, not an administrator — admin hides every access gate. Business rules themselves are covered in the mobile stakeholder checklist (Scenarios 1–8); this suite confirms the <em>web client</em> surfaces and enforces them.</p>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>1. Access, Login &amp; Role-Based Navigation</h2>
+                <span class="badge">3 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🔑</span>Login &amp; session</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Valid credentials log in and land on the Dashboard; the tenant name shows in the header.</div><div class="notes-area"><textarea data-note="w1c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Invalid credentials are rejected with a clear message (no crash, no blank page).</div><div class="notes-area"><textarea data-note="w1c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">A page refresh keeps the user signed in (session/token persists); it does not force re-login.</div><div class="notes-area"><textarea data-note="w1c1i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c1i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Logout clears the session and returns to the login page; the back button cannot re-enter the app.</div><div class="notes-area"><textarea data-note="w1c1i4" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🧭</span>Role-based navigation</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">The left navigation shows ONLY the modules the signed-in role may use (e.g. an accountant sees Accounting, not Dispatch).</div><div class="notes-area"><textarea data-note="w1c2i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Signing in as a limited role (e.g. Sales Rep) shows fewer menu items than an admin — capture both for contrast.</div><div class="notes-area"><textarea data-note="w1c2i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Typing a forbidden route directly in the URL bar (e.g. /accounting/journal-entries as a driver) is blocked or redirected — not shown.</div><div class="notes-area"><textarea data-note="w1c2i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Actions the role cannot perform are absent, not shown-then-error (no dead buttons).</div><div class="notes-area"><textarea data-note="w1c2i4" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🖥️</span>Browser &amp; layout</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Loads and works in Chrome/Edge and Firefox with no console errors on the main screens.</div><div class="notes-area"><textarea data-note="w1c3i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Usable at laptop width and tablet width; wide tables scroll inside their panel rather than breaking the page.</div><div class="notes-area"><textarea data-note="w1c3i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w1c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Branding is consistent (Future Gaz green theme, logo) across every module.</div><div class="notes-area"><textarea data-note="w1c3i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>2. Master Data</h2>
+                <span class="badge">3 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">👥</span>Customers</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Customers list loads with working search and pagination.</div><div class="notes-area"><textarea data-note="w2c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create a customer — required-field validation fires; credit limit &amp; terms can be set.</div><div class="notes-area"><textarea data-note="w2c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Edit an existing customer and confirm the change persists after reload.</div><div class="notes-area"><textarea data-note="w2c1i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c1i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Open a customer detail — balance, credit and contact info display.</div><div class="notes-area"><textarea data-note="w2c1i4" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🏭</span>Suppliers, Categories, Units</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Suppliers: list, create (with validation), edit, and view detail.</div><div class="notes-area"><textarea data-note="w2c2i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Product Categories: list, create, edit — including the revenue/COGS account codes used by accounting.</div><div class="notes-area"><textarea data-note="w2c2i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Units of measure: list, create, edit.</div><div class="notes-area"><textarea data-note="w2c2i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📍</span>Warehouses &amp; Tax Rates</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Warehouses: list, create, edit; the warehouse TYPE (e.g. Filling Plant / Depot) can be chosen.</div><div class="notes-area"><textarea data-note="w2c3i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Tax Rates: list, create, edit; effective-from/‑to dates apply.</div><div class="notes-area"><textarea data-note="w2c3i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w2c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">A tax rate shows the correct status chip — Active, Pending (future), or Expired (past).</div><div class="notes-area"><textarea data-note="w2c3i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>3. Inventory — Products &amp; Stock</h2>
+                <span class="badge">3 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🧴</span>Products</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w3c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Products list loads with search; the 6/13/50 kg cylinder and Bulk LPG products are present.</div><div class="notes-area"><textarea data-note="w3c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w3c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create a product with category, unit and account codes; stock/serial-tracking flags can be set.</div><div class="notes-area"><textarea data-note="w3c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w3c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Edit a product; open a product detail view.</div><div class="notes-area"><textarea data-note="w3c1i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📊</span>Stock levels &amp; movements</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w3c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Stock Levels show on-hand, reserved and available per warehouse.</div><div class="notes-area"><textarea data-note="w3c2i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w3c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Stock Movements list loads, filters by type/warehouse, and a movement detail opens.</div><div class="notes-area"><textarea data-note="w3c2i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🔧</span>Adjustments &amp; transfers</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w3c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create an inventory adjustment (increase/decrease/stocktake) with a reason; it posts and appears in the list.</div><div class="notes-area"><textarea data-note="w3c3i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w3c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">The adjustment produces a GL journal entry (cross-check in Accounting).</div><div class="notes-area"><textarea data-note="w3c3i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w3c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create a stock transfer between warehouses; the source shows the stock leaving (in-transit).</div><div class="notes-area"><textarea data-note="w3c3i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w3c3i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Receive the transfer at the destination; destination stock increases and the transfer closes.</div><div class="notes-area"><textarea data-note="w3c3i4" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>4. Inventory — 50 kg Cylinders</h2>
+                <span class="badge">2 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🆕</span>Registration</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w4c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Register a new 50 kg cylinder; the system serial is generated in the NFG50KGS-YYMM-NNNN format.</div><div class="notes-area"><textarea data-note="w4c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w4c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Embedded/manufacturer serials and tare weight can be captured at registration.</div><div class="notes-area"><textarea data-note="w4c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w4c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Registering a cylinder increases the 50 kg stock level (stock sync).</div><div class="notes-area"><textarea data-note="w4c1i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🔎</span>List, detail &amp; locations</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w4c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder list loads with search; status (IN_STOCK / IN_TRANSIT / SOLD / SCRAPPED) and fill status are shown.</div><div class="notes-area"><textarea data-note="w4c2i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w4c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">A cylinder detail shows its history — fills, movements, current location/customer.</div><div class="notes-area"><textarea data-note="w4c2i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w4c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder Locations view shows where cylinders currently are.</div><div class="notes-area"><textarea data-note="w4c2i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>5. Inventory — Bulk Gas</h2>
+                <span class="badge">3 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🫙</span>Tanks</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w5c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create a bulk gas tank with capacity; the tank list shows current level.</div><div class="notes-area"><textarea data-note="w5c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w5c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">A tank detail shows its transaction history (receipts, dispenses, adjustments).</div><div class="notes-area"><textarea data-note="w5c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">⚖️</span>Weigh-bridge receipts</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w5c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create a receipt against a Purchase Order with gross &amp; tare weigh-bridge readings; net = gross − tare is derived (not typed).</div><div class="notes-area"><textarea data-note="w5c2i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w5c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">A draft receipt can be edited/cancelled; a confirmed receipt cannot be edited.</div><div class="notes-area"><textarea data-note="w5c2i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w5c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Confirming a receipt raises the tank level and creates a GRNI journal entry (cross-check in Accounting).</div><div class="notes-area"><textarea data-note="w5c2i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w5c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">The person entering the receipt cannot also confirm it unless their role allows — the Confirm action reflects the role.</div><div class="notes-area"><textarea data-note="w5c2i4" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📉</span>Rota gauge &amp; batches</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w5c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Log a daily rota-gauge reading; the variance vs the system level is shown.</div><div class="notes-area"><textarea data-note="w5c3i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w5c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Confirming the first receipt after a deplete opens a batch (BGB-YYYY-NNNN); a second receipt tops it up (one open batch per tank).</div><div class="notes-area"><textarea data-note="w5c3i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w5c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Declare Deplete with a final gauge reading; loss/gain is computed and the tank reconciles to the gauge.</div><div class="notes-area"><textarea data-note="w5c3i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>6. Sales</h2>
+                <span class="badge">2 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">➕</span>Create order</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w6c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create a sales order for each type — Field (50 kg), Counter, Bobtail; the product picker only offers products valid for that type.</div><div class="notes-area"><textarea data-note="w6c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w6c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Order totals (subtotal, tax, shipping, discount) calculate correctly.</div><div class="notes-area"><textarea data-note="w6c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w6c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Payment-type rules apply — FULL needs a bank account; PARTIAL needs account + amount; CREDIT needs none.</div><div class="notes-area"><textarea data-note="w6c1i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">✅</span>Approvals &amp; invoices</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w6c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">The approvals queue lists SUBMITTED orders; only submitted orders can be approved or rejected.</div><div class="notes-area"><textarea data-note="w6c2i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w6c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Rejecting requires a reason, which is stored against the order.</div><div class="notes-area"><textarea data-note="w6c2i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w6c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">The Customer Debtor Report is reachable from approval — credit limit, outstanding, aging buckets, unpaid invoices.</div><div class="notes-area"><textarea data-note="w6c2i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w6c2i4" onchange="saveState()"></div><div class="item-content"><div class="item-text">Invoices list and an invoice detail open and link back to the order.</div><div class="notes-area"><textarea data-note="w6c2i4" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>7. Orders</h2>
+                <span class="badge">1 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🔄</span>Order lifecycle</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w7c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">The Orders list loads with status filters; an order detail shows line items and history.</div><div class="notes-area"><textarea data-note="w7c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w7c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">The status reflects its stage (DRAFT → SUBMITTED → CONFIRMED → PROCESSING → DELIVERED / COMPLETED).</div><div class="notes-area"><textarea data-note="w7c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w7c1i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">The order shows its Accounting status chip (Pending / Posted / Failed) once delivered.</div><div class="notes-area"><textarea data-note="w7c1i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>8. Dispatch</h2>
+                <span class="badge">3 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🚐</span>Vehicles</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w8c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Vehicles list, create and edit; a vehicle type (standard truck / bobtail tanker) and capacity can be set.</div><div class="notes-area"><textarea data-note="w8c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w8c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">A bobtail tanker&#x27;s capacity is fixed by the calibration chart (5,415 kg) and is not freely editable.</div><div class="notes-area"><textarea data-note="w8c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🗺️</span>Dispatch orders &amp; trips</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w8c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create a dispatch order from a CONFIRMED 50 kg sales order; non-50 kg products are rejected/redirected.</div><div class="notes-area"><textarea data-note="w8c2i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w8c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create a trip, assign dispatch orders, and move it through loading → depart → deliver → complete.</div><div class="notes-area"><textarea data-note="w8c2i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w8c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Cylinder scanning onto a trip enforces the rules (FULL only, correct warehouse, capacity, no duplicates).</div><div class="notes-area"><textarea data-note="w8c2i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📛</span>Bobtail &amp; discrepancies</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w8c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Create a bobtail delivery trip from a confirmed bobtail order; move it dispatch → deliver → gate-in → close with meter readings.</div><div class="notes-area"><textarea data-note="w8c3i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w8c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Delivering a bobtail/50 kg trip recognises revenue (cross-check the journal entries in Accounting).</div><div class="notes-area"><textarea data-note="w8c3i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w8c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">Weight Discrepancies and Bobtail Variances lists load and an entry can be reviewed/resolved.</div><div class="notes-area"><textarea data-note="w8c3i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>9. Accounting</h2>
+                <span class="badge">4 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📚</span>Chart of accounts &amp; ledger</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">The Chart of Accounts loads; opening an account drills into its General Ledger of transactions.</div><div class="notes-area"><textarea data-note="w9c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Bank Accounts list and detail open; each carries an account type (cash / mobile money / bank).</div><div class="notes-area"><textarea data-note="w9c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">💳</span>Customer payments</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Record a customer payment; the method must match the receiving account type (e.g. mobile money into the M-Pesa account, not a cash till).</div><div class="notes-area"><textarea data-note="w9c2i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">A payment can be allocated against outstanding invoices; the customer balance reduces.</div><div class="notes-area"><textarea data-note="w9c2i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🧮</span>Journal entries</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">The Journal Entries list loads; every entry is balanced (debits = credits).</div><div class="notes-area"><textarea data-note="w9c3i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">A 50 kg delivery produces a COGS entry (DR COGS / CR Inventory) AND an AR entry (DR AR / CR Revenue + VAT).</div><div class="notes-area"><textarea data-note="w9c3i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c3i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">A bobtail delivery produces COGS (at the tanker&#x27;s blended cost) and AR — with COGS booked once, not twice.</div><div class="notes-area"><textarea data-note="w9c3i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">📈</span>Financial reports</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c4i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Trial Balance loads and balances (total debits = total credits).</div><div class="notes-area"><textarea data-note="w9c4i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c4i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Balance Sheet and Income Statement render with sensible figures.</div><div class="notes-area"><textarea data-note="w9c4i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w9c4i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">AR Aging and AP Aging reports load and bucket balances by age.</div><div class="notes-area"><textarea data-note="w9c4i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="scenario">
+            <div class="scenario-header" onclick="toggleScenario(this)">
+                <h2>10. Cross-Cutting &amp; Data Integrity</h2>
+                <span class="badge">3 areas</span>
+            </div>
+            <div class="scenario-body">
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🔁</span>Web ↔ mobile parity</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w10c1i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">A record created on the web app (e.g. a customer or order) appears on the mobile app, and vice-versa — same backend, one source of truth.</div><div class="notes-area"><textarea data-note="w10c1i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w10c1i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Status changes made on one client are reflected on the other after refresh.</div><div class="notes-area"><textarea data-note="w10c1i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">🛡️</span>Security &amp; resilience</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w10c2i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">A forbidden action attempted via direct URL or the browser dev-tools/API is refused by the server (403), not merely hidden in the UI.</div><div class="notes-area"><textarea data-note="w10c2i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w10c2i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">Validation errors are shown clearly next to the field or in a banner; nothing fails silently.</div><div class="notes-area"><textarea data-note="w10c2i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w10c2i3" onchange="saveState()"></div><div class="item-content"><div class="item-text">A dropped network / server error surfaces a readable message and the app recovers on retry.</div><div class="notes-area"><textarea data-note="w10c2i3" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+                <div class="checkpoint-group">
+                    <div class="checkpoint-title"><span class="icon">✨</span>Polish</div>
+                    <ul class="checklist">
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w10c3i1" onchange="saveState()"></div><div class="item-content"><div class="item-text">Long lists paginate or virtualise; there are no broken links or dead-end pages.</div><div class="notes-area"><textarea data-note="w10c3i1" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                        <li><div class="checkbox-wrapper"><input type="checkbox" data-id="w10c3i2" onchange="saveState()"></div><div class="item-content"><div class="item-text">No uncaught errors appear in the browser console during a normal walkthrough of each module.</div><div class="notes-area"><textarea data-note="w10c3i2" placeholder="Notes / Evidence / Defect ref..." rows="1" oninput="saveState()"></textarea></div></div></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer-actions">
+            <button class="btn btn-primary" onclick="window.print()">🖨️ Print / Save as PDF</button>
+            <button class="btn btn-secondary" onclick="uncheckAll()">↩️ Reset All Checkboxes</button>
+            <button class="btn btn-success" onclick="checkAll()">✅ Mark All as Passed</button>
+            <button class="btn btn-warning" onclick="clearStorage()">🗑️ Clear Saved Data</button>
+        </div>
+    </div>
+    <script>
+        const STORAGE_KEY = 'futuregas_webapp_testsuite_v1';
+
+        function saveState() {
+            const state = {
+                meta: {
+                    client: document.getElementById('clientName').value,
+                    date: document.getElementById('demoDate').value,
+                    presenter: document.getElementById('presenter').value,
+                    duration: document.getElementById('demoDuration').value
+                },
+                checks: {},
+                notes: {}
+            };
+
+            document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => {
+                state.checks[cb.dataset.id] = cb.checked;
+            });
+
+            document.querySelectorAll('textarea[data-note]').forEach(ta => {
+                state.notes[ta.dataset.note] = ta.value;
+            });
+
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            showSaveIndicator();
+            updateProgress();
+        }
+
+        function loadState() {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            if (!raw) return;
+
+            try {
+                const state = JSON.parse(raw);
+
+                if (state.meta) {
+                    document.getElementById('clientName').value = state.meta.client || '';
+                    document.getElementById('demoDate').value = state.meta.date || '';
+                    document.getElementById('presenter').value = state.meta.presenter || '';
+                    document.getElementById('demoDuration').value = state.meta.duration || '';
+                }
+
+                if (state.checks) {
+                    document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => {
+                        if (state.checks[cb.dataset.id] !== undefined) {
+                            cb.checked = state.checks[cb.dataset.id];
+                        }
+                    });
+                }
+
+                if (state.notes) {
+                    document.querySelectorAll('textarea[data-note]').forEach(ta => {
+                        if (state.notes[ta.dataset.note] !== undefined) {
+                            ta.value = state.notes[ta.dataset.note];
+                        }
+                    });
+                }
+
+                updateProgress();
+            } catch (e) {
+                console.error('Failed to load state', e);
+            }
+        }
+
+        function showSaveIndicator() {
+            const indicator = document.getElementById('saveIndicator');
+            indicator.classList.add('show');
+            setTimeout(() => indicator.classList.remove('show'), 1500);
+        }
+
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('input[type="checkbox"][data-id]');
+            const checked = document.querySelectorAll('input[type="checkbox"][data-id]:checked');
+            const percent = checkboxes.length > 0 ? Math.round((checked.length / checkboxes.length) * 100) : 0;
+            document.getElementById('overallProgress').style.width = percent + '%';
+            document.getElementById('progressText').textContent = percent + '%';
+
+            checkboxes.forEach(cb => {
+                const li = cb.closest('li');
+                if (cb.checked) {
+                    li.classList.add('checked');
+                } else {
+                    li.classList.remove('checked');
+                }
+            });
+        }
+
+        function uncheckAll() {
+            if (!confirm('Reset all checkboxes? Notes will be preserved.')) return;
+            document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => cb.checked = false);
+            saveState();
+        }
+
+        function checkAll() {
+            document.querySelectorAll('input[type="checkbox"][data-id]').forEach(cb => cb.checked = true);
+            saveState();
+        }
+
+        function clearStorage() {
+            if (!confirm('Clear ALL saved data including notes? This cannot be undone.')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            location.reload();
+        }
+
+        function toggleScenario(header) {
+            const body = header.nextElementSibling;
+            body.style.display = body.style.display === 'none' ? 'block' : 'none';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.scenario-body').forEach(b => b.style.display = 'block');
+            loadState();
+        });
+    </script>
+
+</body>
+</html>
